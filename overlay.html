@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Marker overlay</title>
+    <script type="module" src="/src/overlay/overlay.ts"></script>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; pointer-events: none; }
+      canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <canvas id="ink"></canvas>
+    <div id="marker"></div>
+  </body>
+</html>
