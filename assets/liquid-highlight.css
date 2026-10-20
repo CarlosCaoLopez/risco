@@ -5,8 +5,8 @@
    loads custom CSS. */
 
 mark.hl {
-  --hl: 255 214 10;
-  --hl-a: 0.40;
+  --hl: 255 232 102;
+  --hl-a: 0.38;
   --hl-sheen: 0.55;
   --hl-edge: 0.85;
   --hl-hairline: 0 0 0 / 0.10;
@@ -38,7 +38,7 @@ mark.hl {
   transition: background-color 0.2s, box-shadow 0.2s;
 }
 
-mark.hl-yellow { --hl: 255 214 10; }
+mark.hl-yellow { --hl: 255 232 102; }
 mark.hl-pink   { --hl: 255 64 129; --hl-a: 0.34; }
 mark.hl-green  { --hl: 52 211 105; --hl-a: 0.36; }
 mark.hl-blue   { --hl: 64 156 255; --hl-a: 0.34; }
@@ -63,7 +63,7 @@ body.vscode-high-contrast mark.hl {
   --hl-edge: 0.32;
   --hl-hairline: 255 255 255 / 0.10;
 }
-.theme-dark mark.hl-yellow, body.vscode-dark mark.hl-yellow { --hl-a: 0.30; }
+.theme-dark mark.hl-yellow, body.vscode-dark mark.hl-yellow { --hl-a: 0.28; }
 
 @media (prefers-color-scheme: dark) {
   body:not(.theme-light):not(.vscode-light) mark.hl {

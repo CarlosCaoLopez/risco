@@ -137,7 +137,7 @@ pub fn inline_css(color: &str) -> String {
         "green" => "52,211,105",
         "blue" => "64,156,255",
         "purple" => "175,102,255",
-        _ => "255,214,10",
+        _ => "255,232,102",
     };
     format!(
         "background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0) 58%),\

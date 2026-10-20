@@ -12,7 +12,7 @@ interface MarkerEvent {
 }
 
 const RGB: Record<string, string> = {
-  yellow: "255, 214, 10",
+  yellow: "255, 232, 102",
   pink: "255, 64, 129",
   green: "52, 211, 105",
   blue: "64, 156, 255",
