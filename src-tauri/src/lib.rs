@@ -5,9 +5,9 @@ mod locate;
 mod orca;
 mod overlay;
 mod selection;
+mod plugins;
 mod sound;
 mod store;
-mod styles;
 mod window;
 
 use config::Config;
@@ -42,10 +42,9 @@ struct TrayItems {
 #[serde(rename_all = "camelCase")]
 struct Snapshot {
     config: Config,
-    viewers: Vec<styles::Viewer>,
+    viewers: Vec<plugins::Viewer>,
     detected_roots: Vec<PathBuf>,
     autostart: bool,
-    css: &'static str,
 }
 
 fn update_config(app: &AppHandle, f: impl FnOnce(&mut Config)) {
@@ -74,9 +73,8 @@ fn snapshot(app: AppHandle, state: tauri::State<AppState>) -> Snapshot {
     let config = state.config.read().expect("config lock").clone();
     Snapshot {
         detected_roots: locate::roots(&[]),
-        viewers: styles::viewers(),
+        viewers: plugins::viewers(),
         autostart: app.autolaunch().is_enabled().unwrap_or(false),
-        css: styles::CSS,
         config,
     }
 }
@@ -87,15 +85,8 @@ fn save_config(app: AppHandle, config: Config) {
 }
 
 #[tauri::command]
-fn install_style(kind: String, path: PathBuf) -> Result<(), String> {
-    styles::install(&kind, &path)
-}
-
-#[tauri::command]
-fn copy_css() -> Result<(), String> {
-    arboard::Clipboard::new()
-        .and_then(|mut c| c.set_text(styles::CSS))
-        .map_err(|e| e.to_string())
+fn install_plugin(kind: String, path: PathBuf) -> Result<(), String> {
+    plugins::install(&kind, &path)
 }
 
 /// Move old `<mark>` highlights out of every note into its sidecar.
@@ -249,8 +240,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             snapshot,
             save_config,
-            install_style,
-            copy_css,
+            install_plugin,
             migrate_marks,
             test_sound,
             set_autostart

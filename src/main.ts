@@ -27,7 +27,6 @@ interface Snapshot {
   viewers: Viewer[];
   detectedRoots: string[];
   autostart: boolean;
-  css: string;
 }
 
 const COLORS: [id: string, label: string][] = [
@@ -159,9 +158,9 @@ function renderViewers(viewers: Viewer[]) {
     if (v.installed) done();
     btn.addEventListener("click", async () => {
       try {
-        await invoke("install_style", { kind: v.kind, path: v.path });
+        await invoke("install_plugin", { kind: v.kind, path: v.path });
         done();
-        toast(v.kind === "obsidian" ? "Estilo activado en la bóveda" : "Estilo añadido a la vista previa");
+        toast(v.kind === "obsidian" ? "Plugin activado: recarga Obsidian" : "Extensión instalada: reabre la vista previa");
       } catch (e) {
         toast(String(e));
       }
@@ -169,7 +168,7 @@ function renderViewers(viewers: Viewer[]) {
     ul.append(row);
   }
   if (!viewers.length) {
-    ul.append(li(`<div class="empty">No encontré bóvedas de Obsidian ni carpetas de VS Code.</div>`));
+    ul.append(li(`<div class="empty">No encontré bóvedas de Obsidian ni VS Code.</div>`));
   }
 }
 
@@ -213,11 +212,6 @@ async function init() {
     } catch (err) {
       toast(String(err));
     }
-  });
-
-  $("copy-css").addEventListener("click", async () => {
-    await invoke("copy_css");
-    toast("CSS copiado al portapapeles");
   });
 
   $("migrate").addEventListener("click", async () => {
