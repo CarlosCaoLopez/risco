@@ -141,7 +141,7 @@ pub fn inline_css(color: &str) -> String {
     };
     format!(
         "background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0) 58%),\
-         rgba({rgb},.38);border-radius:.32em .55em .38em .5em;padding:.02em .2em;\
+         rgba({rgb},.38);border-radius:.32em .55em .38em .5em;padding:.1em .24em;\
          box-shadow:inset 0 .75px 0 rgba(255,255,255,.85),0 0 0 .5px rgba(0,0,0,.1),\
          0 2px 7px rgba({rgb},.26);-webkit-box-decoration-break:clone;\
          box-decoration-break:clone;color:inherit"
