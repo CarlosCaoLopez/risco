@@ -1,0 +1,8 @@
+[package]
+name = "mdmark"
+version = "0.1.0"
+edition = "2021"
+description = "Find rendered text inside Markdown source and wrap it in <mark> highlights"
+
+[dependencies]
+pulldown-cmark = { version = "0.13", default-features = false }
