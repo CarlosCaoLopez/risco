@@ -100,6 +100,8 @@ fn apply(cfg: &Config, undo: &Undo) -> Result<mdmark::Action, String> {
     let source = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
     // Orca's editor shows HTML as text and loads no plugins: only `++` shows.
     let plus = app == window::App::Orca;
+    // A note moved while nobody watched gets its old highlights back first.
+    store::adopt(&path, &roots);
     let edit = store::toggle(&path, &source, &text, &cfg.color, plus)?;
     *undo.lock().expect("undo lock") = commit(&edit.changes).map_err(|e| e.to_string())?;
     Ok(edit.action)

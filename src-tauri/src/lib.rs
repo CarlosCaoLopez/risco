@@ -1,4 +1,5 @@
 mod config;
+mod follow;
 mod highlight;
 mod input;
 mod locate;
@@ -228,6 +229,7 @@ pub fn run() {
             let undo: Undo = Arc::new(Mutex::new(Vec::new()));
             let (tx, rx) = mpsc::channel();
             input::spawn(config.clone(), tx);
+            follow::spawn(config.clone());
             highlight::spawn(handle.clone(), config.clone(), sound.clone(), undo.clone(), rx);
             app.manage(AppState { config: config.clone(), sound, undo });
 

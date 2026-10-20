@@ -115,6 +115,11 @@ pub fn roots(configured: &[PathBuf]) -> Vec<PathBuf> {
 }
 
 pub fn markdown_files(roots: &[PathBuf]) -> Vec<PathBuf> {
+    files(roots, is_markdown)
+}
+
+/// Files under `roots` that pass `want`, skipping tool and trash folders.
+pub fn files(roots: &[PathBuf], want: impl Fn(&Path) -> bool) -> Vec<PathBuf> {
     let keep = |e: &DirEntry| {
         let name = e.file_name().to_string_lossy();
         !(e.file_type().is_dir() && SKIP_DIRS.contains(&name.as_ref()))
@@ -123,13 +128,18 @@ pub fn markdown_files(roots: &[PathBuf]) -> Vec<PathBuf> {
         .iter()
         .flat_map(|r| WalkDir::new(r).max_depth(12).into_iter().filter_entry(keep))
         .filter_map(Result::ok)
-        .filter(|e| e.file_type().is_file() && is_markdown(e.path()))
+        .filter(|e| e.file_type().is_file() && want(e.path()))
         .map(DirEntry::into_path)
         .take(MAX_FILES)
         .collect()
 }
 
-fn is_markdown(p: &Path) -> bool {
+/// Inside a folder the scans skip, such as `.git` or `.trash`.
+pub fn skipped(path: &Path) -> bool {
+    path.components().any(|c| SKIP_DIRS.iter().any(|d| c.as_os_str() == *d))
+}
+
+pub fn is_markdown(p: &Path) -> bool {
     p.extension()
         .and_then(|e| e.to_str())
         .is_some_and(|e| e.eq_ignore_ascii_case("md") || e.eq_ignore_ascii_case("markdown"))

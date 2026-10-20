@@ -52,12 +52,92 @@ pub fn sidecar(note: &Path) -> PathBuf {
     note.with_file_name(format!(".{name}.hl.jsonl"))
 }
 
+/// `dir/name.md` for `dir/.name.md.hl.jsonl`, the inverse of `sidecar`.
+pub fn note_of(sidecar: &Path) -> Option<PathBuf> {
+    let name = sidecar.file_name()?.to_str()?;
+    let note = name.strip_prefix('.')?.strip_suffix(".hl.jsonl")?;
+    (!note.is_empty()).then(|| sidecar.with_file_name(note))
+}
+
 pub fn load(note: &Path) -> Vec<Record> {
-    std::fs::read_to_string(sidecar(note))
+    read(&sidecar(note))
+}
+
+fn read(sidecar: &Path) -> Vec<Record> {
+    std::fs::read_to_string(sidecar)
         .unwrap_or_default()
         .lines()
         .filter_map(|l| serde_json::from_str(l).ok())
         .collect()
+}
+
+/// Move `from`'s sidecar beside `to`, for a note that was moved or renamed.
+/// Does nothing when there is none or `to` already has one (a viewer plugin
+/// got there first).
+pub fn relocate(from: &Path, to: &Path) -> std::io::Result<bool> {
+    let (src, dst) = (sidecar(from), sidecar(to));
+    if !src.exists() || dst.exists() {
+        return Ok(false);
+    }
+    move_file(&src, &dst)?;
+    Ok(true)
+}
+
+fn move_file(src: &Path, dst: &Path) -> std::io::Result<()> {
+    if std::fs::rename(src, dst).is_err() {
+        // Renaming fails across file systems: copy, then remove.
+        std::fs::copy(src, dst)?;
+        std::fs::remove_file(src)?;
+    }
+    Ok(())
+}
+
+/// Sidecars under `roots` whose note is gone.
+fn orphans(roots: &[PathBuf]) -> Vec<PathBuf> {
+    crate::locate::files(roots, |p| note_of(p).is_some_and(|n| !n.exists()))
+}
+
+/// Give `note` the sidecar it left behind when it was moved without its
+/// viewer knowing: an orphan with the same file name whose highlights are
+/// found in the note. Returns where it came from.
+pub fn adopt(note: &Path, roots: &[PathBuf]) -> Option<PathBuf> {
+    if sidecar(note).exists() {
+        return None;
+    }
+    adopt_from(note, &orphans(roots))
+}
+
+/// Run `adopt` for every note that could take an orphan, e.g. after notes
+/// were moved while the app was closed.
+pub fn adopt_orphans(roots: &[PathBuf]) -> Vec<PathBuf> {
+    let orphans = orphans(roots);
+    if orphans.is_empty() {
+        return Vec::new();
+    }
+    let names: Vec<_> = orphans.iter().filter_map(|o| o.file_name()).collect();
+    crate::locate::markdown_files(roots)
+        .into_iter()
+        .filter(|n| names.contains(&sidecar(n).file_name().unwrap_or_default()))
+        .filter(|n| adopt_from(n, &orphans).is_some())
+        .collect()
+}
+
+/// `adopt` with a known list of orphan sidecars.
+pub fn adopt_from(note: &Path, orphans: &[PathBuf]) -> Option<PathBuf> {
+    let target = sidecar(note);
+    if target.exists() {
+        return None;
+    }
+    let source = std::fs::read_to_string(note).ok()?;
+    let found = |o: &PathBuf| read(o).iter().filter(|r| mdmark::resolve(&source, &r.quote()).is_some()).count();
+    let (best, _) = orphans
+        .iter()
+        .filter(|o| o.file_name() == target.file_name())
+        .map(|o| (o, found(o)))
+        .filter(|&(_, n)| n > 0)
+        .max_by_key(|&(_, n)| n)?;
+    move_file(best, &target).ok()?;
+    Some(best.clone())
 }
 
 /// The sidecar contents, or `None` to delete it once it is empty.
@@ -180,6 +260,63 @@ mod tests {
     #[test]
     fn sidecar_name() {
         assert_eq!(sidecar(Path::new("/a/b/clase.md")), PathBuf::from("/a/b/.clase.md.hl.jsonl"));
+    }
+
+    #[test]
+    fn note_of_inverts_sidecar() {
+        let p = Path::new("/a/b/clase.md");
+        assert_eq!(note_of(&sidecar(p)).as_deref(), Some(p));
+        assert_eq!(note_of(Path::new("/a/clase.md")), None);
+        assert_eq!(note_of(Path::new("/a/..hl.jsonl")), None);
+    }
+
+    #[test]
+    fn relocate_moves_sidecar() {
+        let p = note("relocate", "Hola mundo");
+        apply(&toggle(&p, "Hola mundo", "mundo", "pink", false).unwrap().changes);
+        let to = p.with_file_name("otra.md");
+        assert!(relocate(&p, &to).unwrap());
+        assert!(!sidecar(&p).exists());
+        assert_eq!(load(&to)[0].exact, "mundo");
+        // Nothing left to move.
+        assert!(!relocate(&p, &to).unwrap());
+        std::fs::remove_dir_all(p.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn adopts_the_matching_orphan() {
+        let root = std::env::temp_dir().join(format!("mh-store-adopt-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        for d in ["a", "b", "c", "nueva"] {
+            std::fs::create_dir_all(root.join(d)).unwrap();
+        }
+        // Two notes named nota.md were moved away; a third still has its note.
+        let a = root.join("a/nota.md");
+        let b = root.join("b/nota.md");
+        let c = root.join("c/nota.md");
+        for (p, text, sel) in [(&a, "Hola mundo", "mundo"), (&b, "Adiós luna", "luna"), (&c, "Adiós luna", "luna")] {
+            std::fs::write(p, text).unwrap();
+            apply(&toggle(p, text, sel, "blue", false).unwrap().changes);
+        }
+        std::fs::remove_file(&a).unwrap();
+        std::fs::remove_file(&b).unwrap();
+        let moved = root.join("nueva/nota.md");
+        std::fs::write(&moved, "Adiós luna").unwrap();
+
+        let roots = vec![root.clone()];
+        assert_eq!(adopt(&moved, &roots), Some(sidecar(&b)));
+        assert_eq!(load(&moved)[0].exact, "luna");
+        assert!(sidecar(&a).exists() && sidecar(&c).exists());
+        // Already has one now.
+        assert_eq!(adopt(&moved, &roots), None);
+
+        let other = root.join("nueva/otra.md");
+        std::fs::rename(&moved, &other).unwrap();
+        relocate(&moved, &other).unwrap();
+        std::fs::write(&moved, "Hola mundo").unwrap();
+        assert_eq!(adopt_orphans(&roots), vec![moved.clone()]);
+        assert_eq!(load(&moved)[0].exact, "mundo");
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
