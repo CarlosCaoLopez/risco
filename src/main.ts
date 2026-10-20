@@ -10,7 +10,6 @@ interface Config {
   color: string;
   modifier: Modifier;
   roots: string[];
-  inline_style: boolean;
   animation: boolean;
   sound: boolean;
   volume: number;
@@ -97,7 +96,6 @@ function render() {
   $<HTMLInputElement>("enabled").checked = config.enabled;
   $<HTMLInputElement>("animation").checked = config.animation;
   $<HTMLInputElement>("sound").checked = config.sound;
-  $<HTMLInputElement>("inline-style").checked = config.inline_style;
   $<HTMLInputElement>("volume").value = String(config.volume);
   $("volume-row").classList.toggle("off", !config.sound);
   $("mod-key").textContent = MOD_LABEL[config.modifier];
@@ -191,7 +189,7 @@ async function init() {
     });
   }
 
-  const bind = (id: string, key: "enabled" | "animation" | "sound" | "inline_style") =>
+  const bind = (id: string, key: "enabled" | "animation" | "sound") =>
     $<HTMLInputElement>(id).addEventListener("change", (e) => {
       config[key] = (e.target as HTMLInputElement).checked;
       render();
@@ -200,7 +198,6 @@ async function init() {
   bind("enabled", "enabled");
   bind("animation", "animation");
   bind("sound", "sound");
-  bind("inline-style", "inline_style");
 
   $<HTMLInputElement>("volume").addEventListener("change", (e) => {
     config.volume = Number((e.target as HTMLInputElement).value);
@@ -221,6 +218,15 @@ async function init() {
   $("copy-css").addEventListener("click", async () => {
     await invoke("copy_css");
     toast("CSS copiado al portapapeles");
+  });
+
+  $("migrate").addEventListener("click", async () => {
+    try {
+      const notes = await invoke<number>("migrate_marks");
+      toast(notes ? `Subrayados movidos en ${notes} nota${notes === 1 ? "" : "s"}` : "No había subrayados antiguos");
+    } catch (err) {
+      toast(String(err));
+    }
   });
 
   $("add-root").addEventListener("click", async () => {

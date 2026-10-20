@@ -65,11 +65,11 @@
         <h2>Visores</h2>
         <p class="note">El efecto de cristal lo pinta cada visor con una hoja de estilo. Instálala una vez por bóveda o carpeta.</p>
         <ul class="list" id="viewers"></ul>
-        <div class="row">
-          <div><strong>Estilo incrustado</strong><small>Para visores sin CSS propio (Typora…): el estilo va dentro de cada <code>&lt;mark&gt;</code>. En Orca se usa siempre.</small></div>
-          <label class="switch"><input type="checkbox" id="inline-style" /><span></span></label>
-        </div>
         <button class="pill" id="copy-css">Copiar CSS</button>
+        <div class="row">
+          <div><strong>Sacar subrayados antiguos</strong><small>Mueve los <code>&lt;mark&gt;</code> que haya en tus notas a su archivo oculto <code>.nota.md.hl.jsonl</code>.</small></div>
+          <button class="pill" id="migrate">Mover</button>
+        </div>
       </section>
 
       <section class="glass-panel">

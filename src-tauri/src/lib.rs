@@ -6,6 +6,7 @@ mod orca;
 mod overlay;
 mod selection;
 mod sound;
+mod store;
 mod styles;
 mod window;
 
@@ -97,6 +98,20 @@ fn copy_css() -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Move old `<mark>` highlights out of every note into its sidecar.
+#[tauri::command]
+fn migrate_marks(state: tauri::State<AppState>) -> Result<usize, String> {
+    let roots = locate::roots(&state.config.read().expect("config lock").roots);
+    let mut notes = 0;
+    for note in locate::markdown_files(&roots) {
+        if let Some(changes) = store::migrate(&note) {
+            highlight::commit(&changes).map_err(|e| format!("{}: {e}", note.display()))?;
+            notes += 1;
+        }
+    }
+    Ok(notes)
+}
+
 #[tauri::command]
 fn test_sound(state: tauri::State<AppState>, volume: f32) {
     state.sound.demo(volume);
@@ -110,14 +125,11 @@ fn set_autostart(app: AppHandle, on: bool) -> Result<(), String> {
 
 fn undo_last(app: &AppHandle) {
     let state = app.state::<AppState>();
-    let last = state.undo.lock().expect("undo lock").take();
-    match last {
-        Some((path, source)) => {
-            if let Err(e) = highlight::write_atomic(&path, &source) {
-                highlight::notify(app, &format!("No se pudo deshacer: {e}"));
-            }
-        }
-        None => highlight::notify(app, "No hay nada que deshacer."),
+    let last = std::mem::take(&mut *state.undo.lock().expect("undo lock"));
+    if last.is_empty() {
+        highlight::notify(app, "No hay nada que deshacer.");
+    } else if let Err(e) = last.iter().try_for_each(highlight::apply_change) {
+        highlight::notify(app, &format!("No se pudo deshacer: {e}"));
     }
 }
 
@@ -222,7 +234,7 @@ pub fn run() {
             }
 
             let sound = Sound::spawn();
-            let undo: Undo = Arc::new(Mutex::new(None));
+            let undo: Undo = Arc::new(Mutex::new(Vec::new()));
             let (tx, rx) = mpsc::channel();
             input::spawn(config.clone(), tx);
             highlight::spawn(handle.clone(), config.clone(), sound.clone(), undo.clone(), rx);
@@ -239,6 +251,7 @@ pub fn run() {
             save_config,
             install_style,
             copy_css,
+            migrate_marks,
             test_sound,
             set_autostart
         ])

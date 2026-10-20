@@ -20,8 +20,6 @@ pub struct Config {
     pub modifier: Modifier,
     /// Folders searched for Markdown files, on top of the detected ones.
     pub roots: Vec<PathBuf>,
-    /// Write `style="…"` into each mark, for viewers without custom CSS.
-    pub inline_style: bool,
     pub animation: bool,
     pub sound: bool,
     pub volume: f32,
@@ -35,7 +33,6 @@ impl Default for Config {
             // Ctrl+click on macOS is a right click.
             modifier: if cfg!(target_os = "macos") { Modifier::Alt } else { Modifier::Ctrl },
             roots: Vec::new(),
-            inline_style: false,
             animation: true,
             sound: true,
             volume: 0.6,

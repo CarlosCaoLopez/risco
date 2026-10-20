@@ -114,7 +114,7 @@ pub fn roots(configured: &[PathBuf]) -> Vec<PathBuf> {
     out
 }
 
-fn markdown_files(roots: &[PathBuf]) -> Vec<PathBuf> {
+pub fn markdown_files(roots: &[PathBuf]) -> Vec<PathBuf> {
     let keep = |e: &DirEntry| {
         let name = e.file_name().to_string_lossy();
         !(e.file_type().is_dir() && SKIP_DIRS.contains(&name.as_ref()))

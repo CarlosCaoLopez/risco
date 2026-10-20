@@ -5,7 +5,7 @@ use crate::config::Config;
 use crate::input::Gesture;
 use crate::overlay::{self, MarkerEvent};
 use crate::sound::Sound;
-use crate::{locate, selection, styles, window};
+use crate::{locate, selection, store, window};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex, RwLock};
@@ -13,8 +13,15 @@ use std::time::Instant;
 use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 
-/// The file as it was before the last edit, for "Deshacer último".
-pub type Undo = Arc<Mutex<Option<(PathBuf, String)>>>;
+/// New contents for a file; `None` deletes it.
+#[derive(Debug, Clone)]
+pub struct Change {
+    pub path: PathBuf,
+    pub contents: Option<String>,
+}
+
+/// The files as they were before the last edit, for "Deshacer último".
+pub type Undo = Arc<Mutex<Vec<Change>>>;
 
 pub fn spawn(app: AppHandle, config: Arc<RwLock<Config>>, sound: Sound, undo: Undo, rx: Receiver<Gesture>) {
     std::thread::Builder::new()
@@ -91,19 +98,40 @@ fn apply(cfg: &Config, undo: &Undo) -> Result<mdmark::Action, String> {
     })?;
 
     let source = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    // Orca renders raw HTML but loads no custom stylesheet.
-    let inline = cfg.inline_style || app == window::App::Orca;
-    let css = inline.then(|| styles::inline_css(&cfg.color));
-    let style = mdmark::Style { color: &cfg.color, inline_css: css.as_deref() };
-    let out = mdmark::toggle(&source, &text, style).map_err(|e| e.to_string())?;
-    write_atomic(&path, &out.source).map_err(|e| e.to_string())?;
-    *undo.lock().expect("undo lock") = Some((path, source));
-    Ok(out.action)
+    // Orca's editor shows HTML as text and loads no plugins: only `++` shows.
+    let plus = app == window::App::Orca;
+    let edit = store::toggle(&path, &source, &text, &cfg.color, plus)?;
+    *undo.lock().expect("undo lock") = commit(&edit.changes).map_err(|e| e.to_string())?;
+    Ok(edit.action)
+}
+
+/// Apply `changes`, returning what undoes them.
+pub fn commit(changes: &[Change]) -> std::io::Result<Vec<Change>> {
+    let before: Vec<Change> = changes
+        .iter()
+        .map(|c| Change { path: c.path.clone(), contents: std::fs::read_to_string(&c.path).ok() })
+        .collect();
+    for c in changes {
+        apply_change(c)?;
+    }
+    Ok(before)
+}
+
+pub fn apply_change(change: &Change) -> std::io::Result<()> {
+    match &change.contents {
+        Some(text) => write_atomic(&change.path, text),
+        None => match std::fs::remove_file(&change.path) {
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e),
+            _ => Ok(()),
+        },
+    }
 }
 
 /// Write beside the file and rename over it, so viewers never see half a file.
 pub fn write_atomic(path: &Path, contents: &str) -> std::io::Result<()> {
-    let tmp = path.with_extension("md.mh-tmp");
+    let mut tmp = path.as_os_str().to_owned();
+    tmp.push(".mh-tmp");
+    let tmp = PathBuf::from(tmp);
     std::fs::write(&tmp, contents)?;
     if let Ok(meta) = std::fs::metadata(path) {
         let _ = std::fs::set_permissions(&tmp, meta.permissions());

@@ -130,24 +130,6 @@ fn read_object(path: &Path) -> serde_json::Value {
         .unwrap_or_else(|| serde_json::json!({}))
 }
 
-/// Self-contained `style` attribute for viewers that ignore custom CSS.
-pub fn inline_css(color: &str) -> String {
-    let rgb = match color {
-        "pink" => "255,64,129",
-        "green" => "52,211,105",
-        "blue" => "64,156,255",
-        "purple" => "175,102,255",
-        _ => "255,232,102",
-    };
-    format!(
-        "background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0) 58%),\
-         rgba({rgb},.38);border-radius:.32em .55em .38em .5em;padding:.1em .24em;\
-         box-shadow:inset 0 .75px 0 rgba(255,255,255,.85),0 0 0 .5px rgba(0,0,0,.1),\
-         0 2px 7px rgba({rgb},.26);-webkit-box-decoration-break:clone;\
-         box-decoration-break:clone;color:inherit"
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
