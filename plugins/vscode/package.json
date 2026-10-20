@@ -1,0 +1,16 @@
+{
+  "name": "subrayador",
+  "displayName": "Subrayador",
+  "description": "Muestra en la vista previa de Markdown los subrayados hechos con Subrayador.",
+  "publisher": "subrayador",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Other"],
+  "main": "./extension.js",
+  "activationEvents": ["onLanguage:markdown"],
+  "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewScripts": ["./preview.js"],
+    "markdown.previewStyles": ["./liquid-highlight.css"]
+  }
+}

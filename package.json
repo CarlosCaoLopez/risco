@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "node scripts/build-plugins.mjs && vite",
+    "build": "node scripts/build-plugins.mjs && tsc && tsc -p plugins && vite build",
+    "build:plugins": "node scripts/build-plugins.mjs",
     "tauri": "tauri"
   },
   "dependencies": {
@@ -13,7 +14,14 @@
     "@tauri-apps/plugin-dialog": "2.8.3"
   },
   "devDependencies": {
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.13",
     "@tauri-apps/cli": "2.12.3",
+    "@types/markdown-it": "14.2.0",
+    "@types/node": "26.6.5",
+    "@types/vscode": "1.140.0",
+    "@vscode/vsce": "4.0.0",
+    "obsidian": "1.14.4",
     "typescript": "5.9.3",
     "vite": "7.3.7"
   }
