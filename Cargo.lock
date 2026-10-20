@@ -2743,6 +2743,7 @@ dependencies = [
  "arboard",
  "dirs 6.0.0",
  "enigo",
+ "gtk",
  "mdmark",
  "notify",
  "rdev",

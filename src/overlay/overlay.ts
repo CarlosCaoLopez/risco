@@ -2,6 +2,7 @@
 // transparent click-through window covering one monitor.
 
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 interface MarkerEvent {
   kind: "start" | "move" | "end";
@@ -22,9 +23,23 @@ const RGB: Record<string, string> = {
 /** Rough height of a line of text, in CSS px. */
 const LINE = 24;
 
+// Where Rust asked for this window; replaced by where it really is, since
+// the window manager may move it (e.g. below a top panel).
 const params = new URLSearchParams(location.search);
 const origin = { x: Number(params.get("x") ?? 0), y: Number(params.get("y") ?? 0) };
-const scale = Number(params.get("s") ?? devicePixelRatio) || 1;
+let scale = Number(params.get("s") ?? devicePixelRatio) || 1;
+
+const win = getCurrentWindow();
+async function locateSelf() {
+  const [pos, factor] = await Promise.all([win.innerPosition(), win.scaleFactor()]);
+  origin.x = pos.x;
+  origin.y = pos.y;
+  scale = factor;
+}
+void locateSelf();
+void win.onMoved(() => void locateSelf());
+void win.onResized(() => void locateSelf());
+void win.onScaleChanged(() => void locateSelf());
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const canvas = document.getElementById("ink") as HTMLCanvasElement;
