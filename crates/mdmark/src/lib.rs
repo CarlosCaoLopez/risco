@@ -1,5 +1,6 @@
 //! Find text the user selected in a *rendered* Markdown view inside the
-//! Markdown *source*, and wrap it in `<mark class="hl hl-COLOR">` tags.
+//! Markdown *source*, and wrap it in highlight marks: `<mark class="hl hl-COLOR">`
+//! tags or Orca's `++underline++`.
 //!
 //! The source is projected to the plain text a viewer would show (no `**`,
 //! `[]()`, `#`…), with every plain character remembering the byte span it
@@ -7,8 +8,15 @@
 //! ever inserted at text boundaries, so emphasis, links and blocks keep
 //! rendering. Selecting text that is already highlighted removes the
 //! highlight instead.
+//!
+//! Highlights can also live outside the source, as text quotes (see [`Quote`]).
+
+mod anchor;
+
+pub use anchor::{marks, resolve, toggle_quotes, Mark, Quote, QuoteEdit};
 
 use pulldown_cmark::{Event, LinkType, Options, Parser, Tag, TagEnd};
+use std::collections::BTreeMap;
 use std::ops::Range;
 
 pub const COLORS: [&str; 5] = ["yellow", "pink", "green", "blue", "purple"];
@@ -25,8 +33,11 @@ pub struct Outcome {
     pub action: Action,
     /// The selection appeared more than once; the first suitable one was used.
     pub ambiguous: bool,
-    /// Number of `<mark>` elements added or removed.
+    /// Number of marks added or removed.
     pub marks: usize,
+    /// Plain-text characters the highlight covers (added) or covered (removed).
+    /// Marks never change the plain text, so these indices hold before and after.
+    pub range: Range<usize>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,27 +57,33 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+/// How marks are written into the source.
 #[derive(Debug, Clone, Copy)]
-pub struct Style<'a> {
-    pub color: &'a str,
-    /// Inline `style="…"` for viewers that cannot load a custom stylesheet.
-    pub inline_css: Option<&'a str>,
+pub enum Syntax<'a> {
+    /// `<mark class="hl hl-COLOR">…</mark>`
+    Html { color: &'a str },
+    /// `++…++`, the only highlight-like markup Orca's editor renders.
+    Plus,
 }
 
-impl Style<'_> {
-    fn open_tag(&self) -> String {
-        match self.inline_css {
-            Some(css) => format!(
-                r#"<mark class="hl hl-{}" style="{}">"#,
-                self.color,
-                css.replace('"', "'")
-            ),
-            None => format!(r#"<mark class="hl hl-{}">"#, self.color),
+impl Syntax<'_> {
+    fn open(&self) -> String {
+        match self {
+            Syntax::Html { color } => format!(r#"<mark class="hl hl-{color}">"#),
+            Syntax::Plus => PLUS.into(),
+        }
+    }
+
+    fn close(&self) -> &'static str {
+        match self {
+            Syntax::Html { .. } => CLOSE_TAG,
+            Syntax::Plus => PLUS,
         }
     }
 }
 
 const CLOSE_TAG: &str = "</mark>";
+const PLUS: &str = "++";
 
 /// Whether `selection` can be found in `source`, as rendered text or as raw source.
 pub fn contains(source: &str, selection: &str) -> bool {
@@ -78,9 +95,25 @@ pub fn contains(source: &str, selection: &str) -> bool {
     !proj.occurrences(source, &needle).is_empty()
 }
 
+/// Whether every occurrence of `selection` is already highlighted, so
+/// [`toggle`] would remove it.
+pub fn marked(source: &str, selection: &str) -> bool {
+    let needle = normalize(selection);
+    let proj = Projection::new(source);
+    let occs = proj.occurrences(source, &needle);
+    !needle.is_empty() && !occs.is_empty() && occs.iter().all(|r| proj.fully_marked(r.clone()))
+}
+
+/// Remove every `<mark class="hl">` tag, keeping `++` marks.
+pub fn strip_html_marks(source: &str) -> String {
+    let proj = Projection::new(source);
+    let ids: Vec<usize> = (0..proj.marks.len()).filter(|&i| !proj.marks[i].plus).collect();
+    remove_marks(source, &proj, &ids)
+}
+
 /// Highlight `selection` in `source`, or remove the highlight if it is
 /// already fully highlighted.
-pub fn toggle(source: &str, selection: &str, style: Style) -> Result<Outcome, Error> {
+pub fn toggle(source: &str, selection: &str, syntax: Syntax) -> Result<Outcome, Error> {
     let needle = normalize(selection);
     if needle.is_empty() {
         return Err(Error::EmptySelection);
@@ -94,8 +127,8 @@ pub fn toggle(source: &str, selection: &str, style: Style) -> Result<Outcome, Er
 
     match occs.iter().find(|r| !proj.fully_marked((*r).clone())) {
         Some(range) => {
-            let (source, marks) = add(source, &proj, range.clone(), style)?;
-            Ok(Outcome { source, action: Action::Added, ambiguous, marks })
+            let (source, marks, range) = add(source, &proj, range.clone(), syntax)?;
+            Ok(Outcome { source, action: Action::Added, ambiguous, marks, range })
         }
         None => {
             let touched = proj.touched_marks(occs[0].clone());
@@ -105,6 +138,7 @@ pub fn toggle(source: &str, selection: &str, style: Style) -> Result<Outcome, Er
                 action: Action::Removed,
                 ambiguous,
                 marks,
+                range: occs[0].clone(),
             })
         }
     }
@@ -134,12 +168,12 @@ fn add(
     source: &str,
     proj: &Projection,
     range: Range<usize>,
-    style: Style,
-) -> Result<(String, usize), Error> {
+    syntax: Syntax,
+) -> Result<(String, usize, Range<usize>), Error> {
     let touched = proj.touched_marks(range.clone());
     if touched.is_empty() {
-        let groups = proj.wrap_groups(range);
-        return Ok((insert_marks(source, &groups, style), groups.len()));
+        let groups = proj.wrap_groups(range.clone());
+        return Ok((insert_marks(source, &groups, syntax), groups.len(), range));
     }
 
     // Overlaps an existing highlight: merge it into the new one.
@@ -155,15 +189,15 @@ fn add(
     if proj2.chars.len() != proj.chars.len() {
         return Err(Error::NotFound);
     }
-    let groups = proj2.wrap_groups(range);
-    Ok((insert_marks(&stripped, &groups, style), groups.len()))
+    let groups = proj2.wrap_groups(range.clone());
+    Ok((insert_marks(&stripped, &groups, syntax), groups.len(), range))
 }
 
-fn insert_marks(source: &str, groups: &[Range<usize>], style: Style) -> String {
-    let open = style.open_tag();
+fn insert_marks(source: &str, groups: &[Range<usize>], syntax: Syntax) -> String {
+    let open = syntax.open();
     let mut out = source.to_string();
     for g in groups.iter().rev() {
-        out.insert_str(g.end, CLOSE_TAG);
+        out.insert_str(g.end, syntax.close());
         out.insert_str(g.start, &open);
     }
     out
@@ -186,6 +220,53 @@ fn remove_marks(source: &str, proj: &Projection, ids: &[usize]) -> String {
 fn is_hl_open(html: &str) -> bool {
     let h = html.trim_start();
     h.starts_with("<mark") && (h.contains(r#"class="hl "#) || h.contains(r#"class="hl""#))
+}
+
+/// The `COLOR` of `<mark class="hl hl-COLOR">`.
+fn hl_color(html: &str) -> Option<String> {
+    let rest = &html[html.find(" hl-")? + 4..];
+    let end = rest.find(|c: char| !(c.is_ascii_alphanumeric() || c == '-')).unwrap_or(rest.len());
+    (end > 0).then(|| rest[..end].to_string())
+}
+
+/// Byte offsets of paired `++` delimiters, mapped to whether each one opens.
+///
+/// Like Orca's tokenizer, a `++` opens a mark when a later `++` in the same
+/// block closes it; a lone `++` (as in "C++") stays text.
+fn plus_delimiters(source: &str, opts: Options) -> BTreeMap<usize, bool> {
+    let mut out = BTreeMap::new();
+    let mut open: Option<usize> = None;
+    let mut code = 0usize;
+    for (event, range) in Parser::new_ext(source, opts).into_offset_iter() {
+        match event {
+            Event::Start(Tag::CodeBlock(_)) => code += 1,
+            Event::End(TagEnd::CodeBlock) => code = code.saturating_sub(1),
+            Event::Start(
+                Tag::Emphasis | Tag::Strong | Tag::Strikethrough | Tag::Link { .. } | Tag::Image { .. },
+            )
+            | Event::End(TagEnd::Emphasis | TagEnd::Strong | TagEnd::Strikethrough | TagEnd::Link | TagEnd::Image) => {}
+            Event::Start(_) | Event::End(_) => open = None,
+            Event::Text(text) if code == 0 && source.get(range.clone()) == Some(text.as_ref()) => {
+                let mut from = 0;
+                while let Some(i) = text[from..].find(PLUS) {
+                    let at = range.start + from + i;
+                    match open {
+                        // An empty `++++` closes nothing.
+                        Some(o) if at > o + PLUS.len() => {
+                            out.insert(o, true);
+                            out.insert(at, false);
+                            open = None;
+                        }
+                        Some(_) => {}
+                        None => open = Some(at),
+                    }
+                    from += i + PLUS.len();
+                }
+            }
+            _ => {}
+        }
+    }
+    out
 }
 
 fn is_mark_close(html: &str) -> bool {
@@ -223,6 +304,10 @@ struct Container {
 struct MarkPair {
     open: Range<usize>,
     close: Range<usize>,
+    /// `++…++` rather than a `<mark>` tag.
+    plus: bool,
+    /// The `hl-COLOR` of a `<mark>` tag.
+    color: Option<String>,
 }
 
 #[derive(Debug, Default)]
@@ -241,6 +326,7 @@ impl Projection {
             | Options::ENABLE_FOOTNOTES
             | Options::ENABLE_WIKILINKS
             | Options::ENABLE_MATH;
+        let plus = plus_delimiters(source, opts);
         let mut p = Projection::default();
         let mut stack: Vec<usize> = Vec::new();
         let mut mark_stack: Vec<usize> = Vec::new();
@@ -297,7 +383,7 @@ impl Projection {
                         }
                         continue;
                     }
-                    let seg = p.segment(&stack, &mark_stack);
+                    let mut seg = p.segment(&stack, &mark_stack);
                     if let Some((ar, _)) = &atomic {
                         for ch in text.chars() {
                             p.push(ch, Some(seg), ar.clone());
@@ -306,8 +392,24 @@ impl Projection {
                         // An escaped char (`\*`) arrives without its backslash.
                         let escaped = text.starts_with(|c: char| c.is_ascii_punctuation())
                             && source[..range.start].ends_with('\\');
+                        let mut skip_to = 0;
                         for (off, ch) in text.char_indices() {
                             let at = range.start + off;
+                            if at < skip_to {
+                                continue;
+                            }
+                            if let Some(&opens) = plus.get(&at) {
+                                let delim = at..at + PLUS.len();
+                                if opens {
+                                    p.marks.push(MarkPair { open: delim, close: 0..0, plus: true, color: None });
+                                    mark_stack.push(p.marks.len() - 1);
+                                } else if let Some(id) = mark_stack.pop() {
+                                    p.marks[id].close = delim;
+                                }
+                                seg = p.segment(&stack, &mark_stack);
+                                skip_to = at + PLUS.len();
+                                continue;
+                            }
                             let from = if off == 0 && escaped { at - 1 } else { at };
                             p.push(ch, Some(seg), from..at + ch.len_utf8());
                         }
@@ -341,7 +443,8 @@ impl Projection {
                 }
                 Event::InlineHtml(html) => {
                     if is_hl_open(&html) {
-                        p.marks.push(MarkPair { open: range, close: 0..0 });
+                        let color = hl_color(&html);
+                        p.marks.push(MarkPair { open: range, close: 0..0, plus: false, color });
                         mark_stack.push(p.marks.len() - 1);
                     } else if is_mark_close(&html) {
                         if let Some(id) = mark_stack.pop() {
@@ -540,7 +643,7 @@ impl Projection {
 mod tests {
     use super::*;
 
-    const Y: Style = Style { color: "yellow", inline_css: None };
+    const Y: Syntax = Syntax::Html { color: "yellow" };
 
     fn hl(src: &str, sel: &str) -> String {
         toggle(src, sel, Y).expect("toggle").source
@@ -641,7 +744,7 @@ mod tests {
     #[test]
     fn overlapping_merges_and_recolors() {
         let once = hl("Hola mundo feliz", "mundo");
-        let out = toggle(&once, "mundo feliz", Style { color: "pink", inline_css: None }).unwrap();
+        let out = toggle(&once, "mundo feliz", Syntax::Html { color: "pink" }).unwrap();
         assert_eq!(out.action, Action::Added);
         assert_eq!(out.source, r#"Hola <mark class="hl hl-pink">mundo feliz</mark>"#);
     }
@@ -683,13 +786,43 @@ mod tests {
         assert_eq!(toggle(&out, "5*3", Y).unwrap().source, r"precio 5\*3 hoy");
     }
 
+    fn plus(src: &str, sel: &str) -> String {
+        toggle(src, sel, Syntax::Plus).expect("toggle").source
+    }
+
     #[test]
-    fn inline_style() {
-        let st = Style { color: "blue", inline_css: Some("background:\"x\"") };
-        assert_eq!(
-            toggle("a b c", "b", st).unwrap().source,
-            r#"a <mark class="hl hl-blue" style="background:'x'">b</mark> c"#
-        );
+    fn plus_marks() {
+        assert_eq!(plus("Hola mundo feliz", "mundo"), "Hola ++mundo++ feliz");
+        assert_eq!(plus("uno **dos tres**", "uno dos"), "++uno ++**++dos++ tres**");
+        assert_eq!(plus("uno **dos** tres", "uno dos tres"), "++uno **dos** tres++");
+    }
+
+    #[test]
+    fn plus_toggles_off() {
+        let out = toggle("Hola ++mundo++ feliz", "mundo", Syntax::Plus).unwrap();
+        assert_eq!(out.action, Action::Removed);
+        assert_eq!(out.source, "Hola mundo feliz");
+        assert!(marked("Hola ++mundo++ feliz", "mundo"));
+        assert!(!marked("Hola ++mundo++ feliz", "Hola"));
+    }
+
+    #[test]
+    fn plus_merges_with_existing() {
+        assert_eq!(plus("Hola ++mundo++ feliz", "mundo feliz"), "Hola ++mundo feliz++");
+    }
+
+    #[test]
+    fn lone_plus_is_text() {
+        assert_eq!(plus("uso C++ a diario", "a diario"), "uso C++ ++a diario++");
+        assert!(contains("uso C++ a diario", "C++ a"));
+        let code = "```\nx ++ y ++ z\n```";
+        assert!(marks(code).is_empty());
+    }
+
+    #[test]
+    fn strip_keeps_plus() {
+        let src = r#"<mark class="hl hl-blue">a</mark> ++b++"#;
+        assert_eq!(strip_html_marks(src), "a ++b++");
     }
 
     #[test]
