@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Subrayador</title>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <div class="desk" aria-hidden="true"><i></i><i></i><i></i></div>
+
+    <main>
+      <header class="glass-panel hero">
+        <img src="/icon.png" alt="" width="52" height="52" />
+        <div>
+          <h1>Subrayador</h1>
+          <p id="hint">Mantén <kbd id="mod-key">Ctrl</kbd> y arrastra sobre el texto</p>
+        </div>
+        <label class="switch" title="Activado">
+          <input type="checkbox" id="enabled" />
+          <span></span>
+        </label>
+      </header>
+
+      <section class="glass-panel">
+        <h2>Rotulador</h2>
+        <div class="cup" id="cup" role="radiogroup" aria-label="Color"></div>
+        <p class="note">Cambia de color con <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>1</kbd>…<kbd>5</kbd> desde cualquier sitio.</p>
+        <article class="paper" id="preview">
+          <p>
+            Lo que subrayes <mark class="hl" data-live>quedará así en tus notas</mark>,
+            dentro del propio <code>.md</code>. Vuelve a pasar el rotulador sobre un
+            subrayado para <mark class="hl hl-blue">borrarlo</mark>.
+          </p>
+        </article>
+      </section>
+
+      <section class="glass-panel">
+        <h2>Gesto</h2>
+        <div class="segmented" id="modifier" role="radiogroup" aria-label="Tecla">
+          <button data-value="ctrl" role="radio">Ctrl</button>
+          <button data-value="alt" role="radio">Alt</button>
+          <button data-value="shift" role="radio">Mayús</button>
+          <button data-value="meta" role="radio">Super</button>
+        </div>
+      </section>
+
+      <section class="glass-panel">
+        <h2>Efectos</h2>
+        <div class="row">
+          <div><strong>Animación del rotulador</strong><small>Un rotulador sigue al cursor mientras seleccionas.</small></div>
+          <label class="switch"><input type="checkbox" id="animation" /><span></span></label>
+        </div>
+        <div class="row">
+          <div><strong>Sonido de papel</strong><small>Fieltro rozando el papel y el clic del capuchón.</small></div>
+          <label class="switch"><input type="checkbox" id="sound" /><span></span></label>
+        </div>
+        <div class="row" id="volume-row">
+          <input type="range" id="volume" min="0" max="1" step="0.05" aria-label="Volumen" />
+          <button class="pill" id="test-sound">Probar</button>
+        </div>
+      </section>
+
+      <section class="glass-panel">
+        <h2>Visores</h2>
+        <p class="note">El efecto de cristal lo pinta cada visor con una hoja de estilo. Instálala una vez por bóveda o carpeta.</p>
+        <ul class="list" id="viewers"></ul>
+        <div class="row">
+          <div><strong>Estilo incrustado</strong><small>Para visores sin CSS propio (Orca, Typora…): el estilo va dentro de cada <code>&lt;mark&gt;</code>.</small></div>
+          <label class="switch"><input type="checkbox" id="inline-style" /><span></span></label>
+        </div>
+        <button class="pill" id="copy-css">Copiar CSS</button>
+      </section>
+
+      <section class="glass-panel">
+        <h2>Carpetas de notas</h2>
+        <ul class="list" id="roots"></ul>
+        <button class="pill" id="add-root">Añadir carpeta…</button>
+      </section>
+
+      <section class="glass-panel">
+        <div class="row">
+          <div><strong>Arrancar con el sistema</strong><small>Se queda en la bandeja, listo para subrayar.</small></div>
+          <label class="switch"><input type="checkbox" id="autostart" /><span></span></label>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast glass-capsule" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

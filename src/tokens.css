@@ -1,0 +1,60 @@
+/* Design tokens, after tendedero.app: crisp macOS glass, system type,
+   springy motion. */
+
+:root {
+  --font: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Cantarell", "Segoe UI Variable", "Segoe UI", sans-serif;
+  --font-rounded: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --ink: #1d1d1f;
+  --ink-2: rgba(29, 29, 31, 0.62);
+  --ink-3: rgba(29, 29, 31, 0.42);
+  --accent: #0a84ff;
+  --bg: #f4f2ee;
+  --paper: #fffdf8;
+  --paper-ink: #2a2723;
+
+  --glass-bg: rgba(250, 250, 252, 0.62);
+  --glass-strong: rgba(250, 250, 252, 0.80);
+  --glass-edge-top: rgba(255, 255, 255, 0.85);
+  --glass-edge-bottom: rgba(255, 255, 255, 0.18);
+  --glass-hairline: rgba(0, 0, 0, 0.10);
+  --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 10px 30px rgba(22, 20, 60, 0.16), 0 30px 80px rgba(22, 20, 60, 0.14);
+  --control: rgba(120, 120, 128, 0.16);
+  --control-hover: rgba(120, 120, 128, 0.24);
+  --separator: rgba(0, 0, 0, 0.08);
+  --switch-off: rgba(120, 120, 128, 0.28);
+  --ok: #30b85a;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.22, 1.04);
+
+  --yellow: 255 214 10;
+  --pink: 255 64 129;
+  --green: 52 211 105;
+  --blue: 64 156 255;
+  --purple: 175 102 255;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #f5f5f7;
+    --ink-2: rgba(245, 245, 247, 0.66);
+    --ink-3: rgba(245, 245, 247, 0.42);
+    --bg: #0f0e14;
+    --paper: #1c1b22;
+    --paper-ink: #ecebef;
+    --glass-bg: rgba(44, 42, 56, 0.55);
+    --glass-strong: rgba(40, 38, 52, 0.80);
+    --glass-edge-top: rgba(255, 255, 255, 0.30);
+    --glass-edge-bottom: rgba(255, 255, 255, 0.05);
+    --glass-hairline: rgba(0, 0, 0, 0.45);
+    --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 10px 30px rgba(0, 0, 0, 0.35), 0 30px 80px rgba(0, 0, 0, 0.35);
+    --control: rgba(255, 255, 255, 0.10);
+    --control-hover: rgba(255, 255, 255, 0.16);
+    --separator: rgba(255, 255, 255, 0.10);
+    --switch-off: rgba(255, 255, 255, 0.18);
+    color-scheme: dark;
+  }
+}
