@@ -1,9 +1,12 @@
 //! Guess which Markdown file the focused window shows, from its title.
 
+use std::path::PathBuf;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum App {
     VsCode,
     Obsidian,
+    Orca,
     Other,
 }
 
@@ -15,6 +18,8 @@ pub struct Hint {
     pub folder: Option<String>,
     /// The editor shows unsaved changes; writing the file would clash.
     pub dirty: bool,
+    /// Exact file, when the app reports it (Orca).
+    pub path: Option<PathBuf>,
 }
 
 pub fn active() -> Option<(App, Hint)> {
@@ -22,12 +27,18 @@ pub fn active() -> Option<(App, Hint)> {
     let ident = format!("{} {}", win.app_name, win.process_path.display()).to_lowercase();
     let app = if ident.contains("obsidian") {
         App::Obsidian
+    } else if ident.contains("orca") {
+        App::Orca
     } else if ident.contains("code") || win.title.ends_with("Visual Studio Code") {
         App::VsCode
     } else {
         App::Other
     };
-    Some((app, parse_title(app, &win.title)))
+    let mut hint = parse_title(app, &win.title);
+    if app == App::Orca {
+        hint.path = crate::orca::active_file();
+    }
+    Some((app, hint))
 }
 
 pub fn parse_title(app: App, title: &str) -> Hint {
@@ -43,6 +54,7 @@ pub fn parse_title(app: App, title: &str) -> Hint {
                 name: (!name.is_empty()).then(|| name.to_string()),
                 folder: (parts.len() > 2).then(|| parts[1].to_string()),
                 dirty,
+                path: None,
             }
         }
         // `nota - Vault - Obsidian v1.8.9`
@@ -50,7 +62,10 @@ pub fn parse_title(app: App, title: &str) -> Hint {
             name: (parts.len() >= 3).then(|| format!("{}.md", parts[0])),
             folder: (parts.len() >= 3).then(|| parts[parts.len() - 2].to_string()),
             dirty: false,
+            path: None,
         },
+        // The title carries nothing; the file comes from Orca's state.
+        App::Orca => Hint::default(),
         App::Other => Hint {
             name: title
                 .split(|c: char| c.is_whitespace() || "—–-|·()[]".contains(c))
@@ -59,6 +74,7 @@ pub fn parse_title(app: App, title: &str) -> Hint {
                 .or_else(|| parts.first().filter(|_| parts.len() > 1).map(|s| s.to_string())),
             folder: None,
             dirty: title.starts_with('*') || title.starts_with('●'),
+            path: None,
         },
     }
 }
@@ -70,7 +86,10 @@ mod tests {
     #[test]
     fn vscode_titles() {
         let h = parse_title(App::VsCode, "● notas.md - apuntes - Visual Studio Code");
-        assert_eq!(h, Hint { name: Some("notas.md".into()), folder: Some("apuntes".into()), dirty: true });
+        assert_eq!(
+            h,
+            Hint { name: Some("notas.md".into()), folder: Some("apuntes".into()), dirty: true, path: None }
+        );
         let h = parse_title(App::VsCode, "Preview notas.md - apuntes - Visual Studio Code");
         assert_eq!(h.name.as_deref(), Some("notas.md"));
         assert!(!h.dirty);

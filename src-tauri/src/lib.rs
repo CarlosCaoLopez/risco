@@ -2,6 +2,7 @@ mod config;
 mod highlight;
 mod input;
 mod locate;
+mod orca;
 mod overlay;
 mod selection;
 mod sound;

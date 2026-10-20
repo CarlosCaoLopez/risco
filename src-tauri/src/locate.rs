@@ -101,6 +101,7 @@ pub fn roots(configured: &[PathBuf]) -> Vec<PathBuf> {
     let mut all: Vec<PathBuf> = configured.to_vec();
     all.extend(obsidian_vaults());
     all.extend(vscode_folders());
+    all.extend(crate::orca::folders());
     let mut out: Vec<PathBuf> = Vec::new();
     for root in all {
         // Drop folders nested inside one already listed.
@@ -152,6 +153,11 @@ fn modified(p: &Path) -> SystemTime {
 /// The file containing `selection`, preferring ones named in the window title
 /// and, among those, the most recently modified.
 pub fn find(roots: &[PathBuf], hint: &Hint, selection: &str) -> Option<PathBuf> {
+    if let Some(path) = hint.path.as_ref().filter(|p| is_markdown(p)) {
+        if std::fs::read_to_string(path).is_ok_and(|src| mdmark::contains(&src, selection)) {
+            return Some(path.clone());
+        }
+    }
     let files = markdown_files(roots);
     let hinted: Vec<&PathBuf> = files.iter().filter(|p| matches_hint(p, hint)).collect();
     let pick = |candidates: Vec<&PathBuf>| {
@@ -189,7 +195,7 @@ mod tests {
         std::fs::write(dir.join("vault/a.md"), "hola **mundo**").unwrap();
         std::fs::write(dir.join("vault/sub/b.md"), "hola mundo").unwrap();
         let roots = vec![dir.clone()];
-        let hint = Hint { name: Some("b.md".into()), folder: Some("sub".into()), dirty: false };
+        let hint = Hint { name: Some("b.md".into()), folder: Some("sub".into()), ..Hint::default() };
         assert_eq!(find(&roots, &hint, "hola mundo"), Some(dir.join("vault/sub/b.md")));
         let none = Hint::default();
         assert!(find(&roots, &none, "hola mundo").is_some());

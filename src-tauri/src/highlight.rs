@@ -77,7 +77,7 @@ pub fn spawn(app: AppHandle, config: Arc<RwLock<Config>>, sound: Sound, undo: Un
 fn apply(cfg: &Config, undo: &Undo) -> Result<mdmark::Action, String> {
     selection::settle();
     let text = selection::selected_text().ok_or("No hay texto seleccionado.")?;
-    let (_, hint) = window::active().unwrap_or((window::App::Other, window::Hint::default()));
+    let (app, hint) = window::active().unwrap_or((window::App::Other, window::Hint::default()));
     if hint.dirty {
         return Err("El archivo tiene cambios sin guardar. Guárdalo y vuelve a subrayar.".into());
     }
@@ -91,7 +91,9 @@ fn apply(cfg: &Config, undo: &Undo) -> Result<mdmark::Action, String> {
     })?;
 
     let source = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    let css = cfg.inline_style.then(|| styles::inline_css(&cfg.color));
+    // Orca renders raw HTML but loads no custom stylesheet.
+    let inline = cfg.inline_style || app == window::App::Orca;
+    let css = inline.then(|| styles::inline_css(&cfg.color));
     let style = mdmark::Style { color: &cfg.color, inline_css: css.as_deref() };
     let out = mdmark::toggle(&source, &text, style).map_err(|e| e.to_string())?;
     write_atomic(&path, &out.source).map_err(|e| e.to_string())?;
