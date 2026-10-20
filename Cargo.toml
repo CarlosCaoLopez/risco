@@ -1,3 +1,10 @@
 [workspace]
 resolver = "2"
-members = ["crates/mdmark"]
+members = ["crates/mdmark", "src-tauri"]
+
+# Keep debug builds small: full debug info only for our own crates.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false

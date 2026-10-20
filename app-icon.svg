@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbfbfd"/>
+      <stop offset="1" stop-color="#e9e9f0"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".2"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe14d" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#ffd60a" stop-opacity=".9"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".7"/>
+      <stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="barrel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2b2b31"/>
+      <stop offset=".45" stop-color="#4a4a52"/>
+      <stop offset="1" stop-color="#1d1d1f"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#16143c" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)" filter="url(#shadow)"/>
+  <rect x="65.5" y="65.5" width="893" height="893" rx="199" fill="none" stroke="url(#edge)" stroke-width="3"/>
+  <!-- the stroke left on the paper -->
+  <rect x="200" y="590" width="560" height="120" rx="44" fill="url(#ink)"/>
+  <rect x="200" y="590" width="560" height="120" rx="44" fill="url(#sheen)"/>
+  <rect x="201" y="591" width="558" height="118" rx="43" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="3"/>
+  <!-- the marker -->
+  <g transform="rotate(-38 640 470)">
+    <rect x="590" y="160" width="140" height="420" rx="40" fill="url(#barrel)"/>
+    <rect x="606" y="176" width="26" height="380" rx="13" fill="#fff" opacity=".18"/>
+    <rect x="590" y="160" width="140" height="120" rx="40" fill="#ffd60a"/>
+    <rect x="606" y="172" width="26" height="96" rx="13" fill="#fff" opacity=".45"/>
+    <path d="M610 580 h100 l-18 70 h-64 z" fill="#3a3a40"/>
+    <path d="M628 650 h64 l-14 52 h-36 z" fill="#ffd60a"/>
+  </g>
+</svg>

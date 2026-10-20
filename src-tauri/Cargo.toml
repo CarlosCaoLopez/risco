@@ -1,0 +1,30 @@
+[package]
+name = "markdown-highlighter"
+version = "0.1.0"
+edition = "2021"
+description = "Highlight Markdown text from any viewer with a liquid-glass marker"
+
+[lib]
+name = "markdown_highlighter_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+mdmark = { path = "../crates/mdmark" }
+tauri = { version = "2.12", features = ["tray-icon", "image-png", "macos-private-api"] }
+tauri-plugin-single-instance = "2.5"
+tauri-plugin-global-shortcut = "2.4"
+tauri-plugin-autostart = "2.7"
+tauri-plugin-notification = "2.7"
+tauri-plugin-dialog = "2.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rdev = "0.5"
+arboard = "3.7"
+enigo = "0.6"
+active-win-pos-rs = "0.11"
+rodio = { version = "0.23", default-features = false, features = ["playback"] }
+walkdir = "2.5"
+dirs = "6"
