@@ -1,0 +1,2 @@
+# Keep short expressions on one line, as the code was written.
+use_small_heuristics = "Max"

@@ -149,6 +149,9 @@ mod tests {
 
     #[test]
     fn generic_title() {
-        assert_eq!(parse_title(App::Other, "readme.md (~/x) — Orca").name.as_deref(), Some("readme.md"));
+        assert_eq!(
+            parse_title(App::Other, "readme.md (~/x) — Orca").name.as_deref(),
+            Some("readme.md")
+        );
     }
 }

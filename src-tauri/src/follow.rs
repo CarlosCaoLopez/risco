@@ -79,8 +79,7 @@ impl Moves {
 
     /// Hand each orphan to a note that arrived with its name and highlights.
     fn settle(&mut self) {
-        self.orphans
-            .retain(|s| s.exists() && store::note_of(s).is_some_and(|n| !n.exists()));
+        self.orphans.retain(|s| s.exists() && store::note_of(s).is_some_and(|n| !n.exists()));
         for note in std::mem::take(&mut self.arrived) {
             if self.orphans.is_empty() {
                 break;
@@ -154,7 +153,11 @@ mod tests {
         let a = root.join("a/nota.md");
         let b = root.join("b/nota.md");
         std::fs::write(&a, "Hola mundo").unwrap();
-        std::fs::write(store::sidecar(&a), r#"{"id":"1","exact":"mundo","prefix":"Hola ","suffix":"","color":"blue"}"#).unwrap();
+        std::fs::write(
+            store::sidecar(&a),
+            r#"{"id":"1","exact":"mundo","prefix":"Hola ","suffix":"","color":"blue"}"#,
+        )
+        .unwrap();
 
         // A rename the OS pairs up.
         let mut moves = Moves::default();

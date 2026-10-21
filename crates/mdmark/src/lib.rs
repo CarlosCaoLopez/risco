@@ -246,9 +246,19 @@ fn plus_delimiters(source: &str, opts: Options) -> BTreeMap<usize, bool> {
             Event::Start(Tag::CodeBlock(_)) => code += 1,
             Event::End(TagEnd::CodeBlock) => code = code.saturating_sub(1),
             Event::Start(
-                Tag::Emphasis | Tag::Strong | Tag::Strikethrough | Tag::Link { .. } | Tag::Image { .. },
+                Tag::Emphasis
+                | Tag::Strong
+                | Tag::Strikethrough
+                | Tag::Link { .. }
+                | Tag::Image { .. },
             )
-            | Event::End(TagEnd::Emphasis | TagEnd::Strong | TagEnd::Strikethrough | TagEnd::Link | TagEnd::Image) => {}
+            | Event::End(
+                TagEnd::Emphasis
+                | TagEnd::Strong
+                | TagEnd::Strikethrough
+                | TagEnd::Link
+                | TagEnd::Image,
+            ) => {}
             Event::Start(_) | Event::End(_) => open = None,
             Event::Text(text) if code == 0 && source.get(range.clone()) == Some(text.as_ref()) => {
                 let mut from = 0;
@@ -347,7 +357,9 @@ impl Projection {
                             if atomic.is_none()
                                 && matches!(
                                     link_type,
-                                    LinkType::WikiLink { .. } | LinkType::Autolink | LinkType::Email
+                                    LinkType::WikiLink { .. }
+                                        | LinkType::Autolink
+                                        | LinkType::Email
                                 )
                             {
                                 atomic = Some((range.clone(), stack.len()));
@@ -405,7 +417,12 @@ impl Projection {
                             if let Some(&opens) = plus.get(&at) {
                                 let delim = at..at + PLUS.len();
                                 if opens {
-                                    p.marks.push(MarkPair { open: delim, close: 0..0, plus: true, color: None });
+                                    p.marks.push(MarkPair {
+                                        open: delim,
+                                        close: 0..0,
+                                        plus: true,
+                                        color: None,
+                                    });
                                     mark_stack.push(p.marks.len() - 1);
                                 } else if let Some(id) = mark_stack.pop() {
                                     p.marks[id].close = delim;
@@ -576,10 +593,8 @@ impl Projection {
     }
 
     fn touched_marks(&self, range: Range<usize>) -> Vec<usize> {
-        let mut ids: Vec<usize> = self
-            .text_chars(range)
-            .filter_map(|c| self.segments[c.seg.unwrap()].mark)
-            .collect();
+        let mut ids: Vec<usize> =
+            self.text_chars(range).filter_map(|c| self.segments[c.seg.unwrap()].mark).collect();
         ids.sort_unstable();
         ids.dedup();
         ids
@@ -595,10 +610,11 @@ impl Projection {
                 continue;
             }
             match groups.last_mut() {
-                Some((_, last)) if *last + 1 == i && {
-                    let p = &self.chars[*last];
-                    p.seg.is_some() && (p.span.end == c.span.start || p.span == c.span)
-                } =>
+                Some((_, last))
+                    if *last + 1 == i && {
+                        let p = &self.chars[*last];
+                        p.seg.is_some() && (p.span.end == c.span.start || p.span == c.span)
+                    } =>
                 {
                     *last = i
                 }
@@ -614,7 +630,8 @@ impl Projection {
                 if self.chars[first..=last].iter().all(|c| c.ch == ' ') {
                     return None;
                 }
-                let start = self.expand(first, a, b).map_or(self.chars[first].span.start, |c| c.start);
+                let start =
+                    self.expand(first, a, b).map_or(self.chars[first].span.start, |c| c.start);
                 let end = self.expand(last, a, b).map_or(self.chars[last].span.end, |c| c.end);
                 Some(start..end)
             })
@@ -655,7 +672,10 @@ mod tests {
 
     #[test]
     fn plain_word() {
-        assert_eq!(hl("Hola mundo feliz", "mundo"), r#"Hola <mark class="hl hl-yellow">mundo</mark> feliz"#);
+        assert_eq!(
+            hl("Hola mundo feliz", "mundo"),
+            r#"Hola <mark class="hl hl-yellow">mundo</mark> feliz"#
+        );
     }
 
     #[test]
@@ -839,6 +859,9 @@ mod tests {
     #[test]
     fn table_cells() {
         let src = "| a | b |\n|---|---|\n| uno | dos |\n";
-        assert_eq!(hl(src, "dos"), "| a | b |\n|---|---|\n| uno | <mark class=\"hl hl-yellow\">dos</mark> |\n");
+        assert_eq!(
+            hl(src, "dos"),
+            "| a | b |\n|---|---|\n| uno | <mark class=\"hl hl-yellow\">dos</mark> |\n"
+        );
     }
 }

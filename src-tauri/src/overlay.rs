@@ -8,8 +8,8 @@
 use serde::Serialize;
 use std::time::Duration;
 use tauri::{
-    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow,
-    WebviewWindowBuilder,
+    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl,
+    WebviewWindow, WebviewWindowBuilder,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -104,7 +104,11 @@ fn unmanage(win: &WebviewWindow) {
     }
 }
 
-fn place(win: &WebviewWindow, pos: PhysicalPosition<i32>, size: PhysicalSize<u32>) -> tauri::Result<()> {
+fn place(
+    win: &WebviewWindow,
+    pos: PhysicalPosition<i32>,
+    size: PhysicalSize<u32>,
+) -> tauri::Result<()> {
     win.set_size(size)?;
     win.set_position(pos)
 }

@@ -14,7 +14,8 @@ const MAX_FILES: usize = 20_000;
 
 /// Obsidian vaults listed in `obsidian.json`.
 pub fn obsidian_vaults() -> Vec<PathBuf> {
-    let mut files: Vec<PathBuf> = dirs::config_dir().into_iter().map(|d| d.join("obsidian")).collect();
+    let mut files: Vec<PathBuf> =
+        dirs::config_dir().into_iter().map(|d| d.join("obsidian")).collect();
     if let Some(home) = dirs::home_dir() {
         // Snap and Flatpak installs keep their config elsewhere.
         files.push(home.join("snap/obsidian/current/.config/obsidian"));
@@ -197,7 +198,10 @@ mod tests {
 
     #[test]
     fn decodes_file_uris() {
-        assert_eq!(file_uri_to_path("file:///home/a/mis%20notas"), Some("/home/a/mis notas".into()));
+        assert_eq!(
+            file_uri_to_path("file:///home/a/mis%20notas"),
+            Some("/home/a/mis notas".into())
+        );
         assert_eq!(file_uri_to_path("file:///c%3A/Users/x"), Some("c:/Users/x".into()));
         assert_eq!(file_uri_to_path("vscode-remote://x"), None);
     }
@@ -209,7 +213,8 @@ mod tests {
         std::fs::write(dir.join("vault/a.md"), "hola **mundo**").unwrap();
         std::fs::write(dir.join("vault/sub/b.md"), "hola mundo").unwrap();
         let roots = vec![dir.clone()];
-        let hint = Hint { name: Some("b.md".into()), folder: Some("sub".into()), ..Hint::default() };
+        let hint =
+            Hint { name: Some("b.md".into()), folder: Some("sub".into()), ..Hint::default() };
         assert_eq!(find(&roots, &hint, "hola mundo"), Some(dir.join("vault/sub/b.md")));
         let none = Hint::default();
         assert!(find(&roots, &none, "hola mundo").is_some());

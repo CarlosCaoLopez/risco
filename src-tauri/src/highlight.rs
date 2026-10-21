@@ -27,7 +27,13 @@ pub struct Change {
 /// The files as they were before the last edit, for "Deshacer último".
 pub type Undo = Arc<Mutex<Vec<Change>>>;
 
-pub fn spawn(app: AppHandle, config: Arc<RwLock<Config>>, sound: Sound, undo: Undo, rx: Receiver<Gesture>) {
+pub fn spawn(
+    app: AppHandle,
+    config: Arc<RwLock<Config>>,
+    sound: Sound,
+    undo: Undo,
+    rx: Receiver<Gesture>,
+) {
     std::thread::Builder::new()
         .name("highlight".into())
         .spawn(move || {
@@ -37,7 +43,13 @@ pub fn spawn(app: AppHandle, config: Arc<RwLock<Config>>, sound: Sound, undo: Un
             let mut active = false;
             for gesture in rx {
                 let cfg = config.read().expect("config lock").clone();
-                let event = |kind, x, y, result| MarkerEvent { kind, x, y, color: cfg.color.clone(), result };
+                let event = |kind, x, y, result| MarkerEvent {
+                    kind,
+                    x,
+                    y,
+                    color: cfg.color.clone(),
+                    result,
+                };
                 match gesture {
                     Gesture::Start { x, y } => {
                         active = window::reading_view();

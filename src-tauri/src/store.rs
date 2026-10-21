@@ -46,7 +46,11 @@ impl Record {
     }
 
     fn quote(&self) -> Quote {
-        Quote { exact: self.exact.clone(), prefix: self.prefix.clone(), suffix: self.suffix.clone() }
+        Quote {
+            exact: self.exact.clone(),
+            prefix: self.prefix.clone(),
+            suffix: self.suffix.clone(),
+        }
     }
 }
 
@@ -133,7 +137,9 @@ pub fn adopt_from(note: &Path, orphans: &[PathBuf]) -> Option<PathBuf> {
         return None;
     }
     let source = std::fs::read_to_string(note).ok()?;
-    let found = |o: &PathBuf| read(o).iter().filter(|r| mdmark::resolve(&source, &r.quote()).is_some()).count();
+    let found = |o: &PathBuf| {
+        read(o).iter().filter(|r| mdmark::resolve(&source, &r.quote()).is_some()).count()
+    };
     let (best, _) = orphans
         .iter()
         .filter(|o| o.file_name() == target.file_name())
@@ -166,7 +172,13 @@ pub struct Edit {
 /// Toggle `selection` in `note`. With `plus` (Orca), or when the selection is
 /// already inside a mark in the note, the note itself is edited; otherwise only
 /// the sidecar changes.
-pub fn toggle(note: &Path, source: &str, selection: &str, color: &str, plus: bool) -> Result<Edit, String> {
+pub fn toggle(
+    note: &Path,
+    source: &str,
+    selection: &str,
+    color: &str,
+    plus: bool,
+) -> Result<Edit, String> {
     let records = load(note);
     if plus || mdmark::marked(source, selection) {
         let out = mdmark::toggle(source, selection, Syntax::Plus).map_err(|e| e.to_string())?;
@@ -180,7 +192,8 @@ pub fn toggle(note: &Path, source: &str, selection: &str, color: &str, plus: boo
         });
     }
 
-    let (inline, mut plain): (Vec<Record>, Vec<Record>) = records.into_iter().partition(|r| r.inline);
+    let (inline, mut plain): (Vec<Record>, Vec<Record>) =
+        records.into_iter().partition(|r| r.inline);
     let quotes: Vec<Quote> = plain.iter().map(Record::quote).collect();
     let edit = mdmark::toggle_quotes(source, &quotes, selection).map_err(|e| e.to_string())?;
     let mut i = 0;
@@ -190,12 +203,20 @@ pub fn toggle(note: &Path, source: &str, selection: &str, color: &str, plus: boo
     });
     plain.extend(edit.add.map(|q| Record::new(q, color, false)));
     let records: Vec<Record> = inline.into_iter().chain(plain).collect();
-    Ok(Edit { action: edit.action, changes: vec![Change { path: sidecar(note), contents: render(&records) }] })
+    Ok(Edit {
+        action: edit.action,
+        changes: vec![Change { path: sidecar(note), contents: render(&records) }],
+    })
 }
 
 /// Rebuild the `inline` records from the `++` marks in the edited note. Marks
 /// never change the plain text, so ranges from before and after the edit line up.
-fn sync_inline(before: &str, out: &mdmark::Outcome, records: Vec<Record>, color: &str) -> Vec<Record> {
+fn sync_inline(
+    before: &str,
+    out: &mdmark::Outcome,
+    records: Vec<Record>,
+    color: &str,
+) -> Vec<Record> {
     let (inline, plain): (Vec<Record>, Vec<Record>) = records.into_iter().partition(|r| r.inline);
     let located: Vec<(Record, Option<Range<usize>>)> = inline
         .into_iter()
@@ -209,14 +230,21 @@ fn sync_inline(before: &str, out: &mdmark::Outcome, records: Vec<Record>, color:
     let mut next: Vec<Record> = plain
         .into_iter()
         // A sidecar highlight now drawn in the note would show twice.
-        .filter(|r| !(added && mdmark::resolve(before, &r.quote()).is_some_and(|q| overlaps(&q, &out.range))))
+        .filter(|r| {
+            !(added
+                && mdmark::resolve(before, &r.quote()).is_some_and(|q| overlaps(&q, &out.range)))
+        })
         .collect();
     for mark in mdmark::marks(&out.source).into_iter().filter(|m| m.plus) {
-        let old = located.iter().find(|(_, q)| q.as_ref().is_some_and(|q| overlaps(q, &mark.range)));
+        let old =
+            located.iter().find(|(_, q)| q.as_ref().is_some_and(|q| overlaps(q, &mark.range)));
         let record = match old {
-            Some((r, _)) if !(added && overlaps(&mark.range, &out.range)) => {
-                Record { exact: mark.quote.exact, prefix: mark.quote.prefix, suffix: mark.quote.suffix, ..r.clone() }
-            }
+            Some((r, _)) if !(added && overlaps(&mark.range, &out.range)) => Record {
+                exact: mark.quote.exact,
+                prefix: mark.quote.prefix,
+                suffix: mark.quote.suffix,
+                ..r.clone()
+            },
             _ => Record::new(mark.quote, color, true),
         };
         next.push(record);
@@ -298,7 +326,9 @@ mod tests {
         let a = root.join("a/nota.md");
         let b = root.join("b/nota.md");
         let c = root.join("c/nota.md");
-        for (p, text, sel) in [(&a, "Hola mundo", "mundo"), (&b, "Adiós luna", "luna"), (&c, "Adiós luna", "luna")] {
+        for (p, text, sel) in
+            [(&a, "Hola mundo", "mundo"), (&b, "Adiós luna", "luna"), (&c, "Adiós luna", "luna")]
+        {
             std::fs::write(p, text).unwrap();
             apply(&toggle(p, text, sel, "blue", false).unwrap().changes);
         }
@@ -332,7 +362,10 @@ mod tests {
         apply(&e.changes);
         assert_eq!(std::fs::read_to_string(&p).unwrap(), "Hola mundo feliz");
         let r = load(&p);
-        assert_eq!((r[0].exact.as_str(), r[0].color.as_str(), r[0].inline), ("mundo", "pink", false));
+        assert_eq!(
+            (r[0].exact.as_str(), r[0].color.as_str(), r[0].inline),
+            ("mundo", "pink", false)
+        );
 
         let e = toggle(&p, "Hola mundo feliz", "mundo", "pink", false).unwrap();
         assert_eq!(e.action, Action::Removed);
@@ -349,7 +382,10 @@ mod tests {
         let src = std::fs::read_to_string(&p).unwrap();
         assert_eq!(src, "Hola ++mundo++ feliz");
         let r = load(&p);
-        assert_eq!((r[0].exact.as_str(), r[0].color.as_str(), r[0].inline), ("mundo", "green", true));
+        assert_eq!(
+            (r[0].exact.as_str(), r[0].color.as_str(), r[0].inline),
+            ("mundo", "green", true)
+        );
 
         // Another mark keeps the first one's color.
         let e = toggle(&p, &src, "Hola", "blue", true).unwrap();

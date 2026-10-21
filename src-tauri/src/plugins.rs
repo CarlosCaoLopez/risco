@@ -133,7 +133,8 @@ fn install_obsidian(vault: &Path) -> std::io::Result<()> {
             std::fs::write(appearance, serde_json::to_string_pretty(&json)?)?;
         }
     }
-    let _ = std::fs::remove_file(vault.join(".obsidian/snippets").join(format!("{OLD_SNIPPET}.css")));
+    let _ =
+        std::fs::remove_file(vault.join(".obsidian/snippets").join(format!("{OLD_SNIPPET}.css")));
     let _ = std::fs::remove_dir_all(vault.join(".obsidian/plugins").join(OLD_ID));
     Ok(())
 }
@@ -144,7 +145,11 @@ fn vscode_extensions_dir() -> Option<PathBuf> {
 
 fn vscode_extensions(dir: &Path) -> Vec<String> {
     std::fs::read_dir(dir)
-        .map(|it| it.filter_map(Result::ok).map(|e| e.file_name().to_string_lossy().into_owned()).collect())
+        .map(|it| {
+            it.filter_map(Result::ok)
+                .map(|e| e.file_name().to_string_lossy().into_owned())
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -163,7 +168,8 @@ fn install_vscode() -> Result<(), String> {
     let vsix = std::env::temp_dir().join(format!("risco-{}.vsix", std::process::id()));
     std::fs::write(&vsix, VSIX).map_err(|e| e.to_string())?;
     let result = ["code", "code-insiders", "codium"].iter().find_map(|cli| {
-        let out = Command::new(cli).arg("--install-extension").arg(&vsix).arg("--force").output().ok()?;
+        let out =
+            Command::new(cli).arg("--install-extension").arg(&vsix).arg("--force").output().ok()?;
         let old = format!("{OLD_ID}.{OLD_ID}");
         let _ = Command::new(cli).arg("--uninstall-extension").arg(old).output();
         Some(out)
@@ -171,7 +177,10 @@ fn install_vscode() -> Result<(), String> {
     let _ = std::fs::remove_file(&vsix);
     match result {
         Some(out) if out.status.success() => Ok(()),
-        Some(out) => Err(crate::i18n::tf("plugins.vscode_failed", &[("error", String::from_utf8_lossy(&out.stderr).trim())])),
+        Some(out) => Err(crate::i18n::tf(
+            "plugins.vscode_failed",
+            &[("error", String::from_utf8_lossy(&out.stderr).trim())],
+        )),
         None => Err(crate::i18n::t("plugins.no_code")),
     }
 }
@@ -191,16 +200,26 @@ mod tests {
     fn installs_into_vault() {
         let dir = std::env::temp_dir().join(format!("mh-plugins-{}", std::process::id()));
         std::fs::create_dir_all(dir.join(".obsidian/snippets")).unwrap();
-        std::fs::write(dir.join(".obsidian/community-plugins.json"), r#"["otro","subrayador"]"#).unwrap();
-        std::fs::create_dir_all(dir.join(".obsidian/plugins/subrayador")).unwrap();
-        std::fs::write(dir.join(".obsidian/appearance.json"), r#"{"enabledCssSnippets":["x","liquid-highlight"]}"#)
+        std::fs::write(dir.join(".obsidian/community-plugins.json"), r#"["otro","subrayador"]"#)
             .unwrap();
+        std::fs::create_dir_all(dir.join(".obsidian/plugins/subrayador")).unwrap();
+        std::fs::write(
+            dir.join(".obsidian/appearance.json"),
+            r#"{"enabledCssSnippets":["x","liquid-highlight"]}"#,
+        )
+        .unwrap();
         std::fs::write(dir.join(".obsidian/snippets/liquid-highlight.css"), "").unwrap();
         install_obsidian(&dir).unwrap();
         install_obsidian(&dir).unwrap();
         assert!(obsidian_installed(&dir));
-        assert_eq!(read_json(&dir.join(".obsidian/community-plugins.json")), serde_json::json!(["otro", PLUGIN_ID]));
-        assert_eq!(read_json(&dir.join(".obsidian/appearance.json"))["enabledCssSnippets"], serde_json::json!(["x"]));
+        assert_eq!(
+            read_json(&dir.join(".obsidian/community-plugins.json")),
+            serde_json::json!(["otro", PLUGIN_ID])
+        );
+        assert_eq!(
+            read_json(&dir.join(".obsidian/appearance.json"))["enabledCssSnippets"],
+            serde_json::json!(["x"])
+        );
         assert!(!dir.join(".obsidian/snippets/liquid-highlight.css").exists());
         assert!(!dir.join(".obsidian/plugins/subrayador").exists());
         std::fs::remove_dir_all(dir).unwrap();
@@ -230,6 +249,13 @@ mod tests {
     fn embedded_extension_id_matches_manifest() {
         let manifest: serde_json::Value =
             serde_json::from_str(include_str!("../../plugins/vscode/package.json")).unwrap();
-        assert_eq!(format!("{}.{}", manifest["publisher"].as_str().unwrap(), manifest["name"].as_str().unwrap()), EXTENSION_ID);
+        assert_eq!(
+            format!(
+                "{}.{}",
+                manifest["publisher"].as_str().unwrap(),
+                manifest["name"].as_str().unwrap()
+            ),
+            EXTENSION_ID
+        );
     }
 }
