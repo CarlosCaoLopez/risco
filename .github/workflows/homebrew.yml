@@ -1,0 +1,59 @@
+# Points the Homebrew cask at a release once it is published, so
+# `brew install --cask CarlosCaoLopez/tap/risco` gets it.
+name: Homebrew
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  cask:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checksum the disk image
+        id: dmg
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${TAG#v}"
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "Risco_${version}_universal.dmg"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum Risco_${version}_universal.dmg | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: CarlosCaoLopez/homebrew-tap
+          token: ${{ secrets.TAP_TOKEN }}
+          path: tap
+
+      - name: Write the cask
+        working-directory: tap
+        run: |
+          mkdir -p Casks
+          cat > Casks/risco.rb <<CASK
+          cask "risco" do
+            version "${{ steps.dmg.outputs.version }}"
+            sha256 "${{ steps.dmg.outputs.sha256 }}"
+
+            url "https://github.com/CarlosCaoLopez/risco/releases/download/v#{version}/Risco_#{version}_universal.dmg"
+            name "Risco"
+            desc "Highlight any Markdown without touching it"
+            homepage "https://github.com/CarlosCaoLopez/risco"
+
+            depends_on macos: ">= :big_sur"
+
+            app "Risco.app"
+
+            zap trash: [
+              "~/Library/Application Support/risco",
+              "~/Library/LaunchAgents/Risco.plist",
+            ]
+          end
+          CASK
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/risco.rb
+          git commit -m "risco ${{ steps.dmg.outputs.version }}"
+          git push
