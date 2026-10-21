@@ -14,6 +14,7 @@ export default class Risco extends Plugin {
   private records = new Map<string, HlRecord[]>();
   private watchers = new Map<string, fs.FSWatcher>();
   private repaintTimer: number | null = null;
+  private reading: boolean | null = null;
 
   async onload() {
     this.registerMarkdownPostProcessor(() => this.scheduleRepaint());
@@ -33,7 +34,20 @@ export default class Risco extends Plugin {
     this.app.workspace.onLayoutReady(() => {
       const file = this.app.workspace.getActiveFile();
       if (file) void this.track(file);
+      void this.reportMode();
     });
+    this.registerEvent(this.app.workspace.on("layout-change", () => void this.reportMode()));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", () => void this.reportMode()));
+  }
+
+  /** Tell the app whether the active note is in reading view, the only
+   *  mode where highlights show; the window title doesn't say. */
+  private async reportMode() {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const reading = view?.getMode() === "preview";
+    if (reading === this.reading) return;
+    this.reading = reading;
+    await this.app.vault.adapter.write(`${this.manifest.dir}/state.json`, JSON.stringify({ reading }));
   }
 
   onunload() {

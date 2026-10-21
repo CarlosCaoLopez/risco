@@ -29,11 +29,17 @@ pub fn spawn(app: AppHandle, config: Arc<RwLock<Config>>, sound: Sound, undo: Un
         .spawn(move || {
             let mut last = (0.0, 0.0, Instant::now());
             let mut speed = 0.0f32;
+            // Whether the current stroke started in a reading view; others are ignored.
+            let mut active = false;
             for gesture in rx {
                 let cfg = config.read().expect("config lock").clone();
                 let event = |kind, x, y, result| MarkerEvent { kind, x, y, color: cfg.color.clone(), result };
                 match gesture {
                     Gesture::Start { x, y } => {
+                        active = window::reading_view();
+                        if !active {
+                            continue;
+                        }
                         last = (x, y, Instant::now());
                         speed = 0.0;
                         if cfg.sound {
@@ -43,6 +49,7 @@ pub fn spawn(app: AppHandle, config: Arc<RwLock<Config>>, sound: Sound, undo: Un
                             overlay::send(&app, event("start", x, y, None));
                         }
                     }
+                    Gesture::Move { .. } | Gesture::End { .. } if !active => {}
                     Gesture::Move { x, y } => {
                         let dt = last.2.elapsed().as_secs_f32().max(1e-3);
                         let dist = ((x - last.0).powi(2) + (y - last.1).powi(2)).sqrt() as f32;

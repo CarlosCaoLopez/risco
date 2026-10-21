@@ -2,6 +2,8 @@
 // the preview when Risco rewrites them.
 
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import type MarkdownIt from "markdown-it";
 import * as vscode from "vscode";
 import { parseRecords, sidecarPath } from "../shared/paint";
@@ -36,6 +38,29 @@ export function activate(ctx: vscode.ExtensionContext) {
     }
   });
   ctx.subscriptions.push(watcher, rename);
+
+  // Tell the app whether the focused window shows a Markdown preview, the
+  // only place highlights show. The title doesn't say in every language.
+  const reportMode = () => {
+    if (!vscode.window.state.focused) return;
+    const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+    // A preview panel (`markdown.preview`) or the preview editor
+    // (`vscode.markdown.preview.editor`).
+    const reading =
+      (input instanceof vscode.TabInputWebview || input instanceof vscode.TabInputCustom) &&
+      input.viewType.includes("markdown.preview");
+    try {
+      fs.writeFileSync(path.join(os.tmpdir(), "risco-vscode.json"), JSON.stringify({ reading }));
+    } catch {
+      // The app then lets every gesture through.
+    }
+  };
+  reportMode();
+  ctx.subscriptions.push(
+    vscode.window.onDidChangeWindowState(reportMode),
+    vscode.window.tabGroups.onDidChangeTabs(reportMode),
+    vscode.window.tabGroups.onDidChangeTabGroups(reportMode),
+  );
 
   return {
     extendMarkdownIt(md: MarkdownIt) {

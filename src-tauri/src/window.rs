@@ -20,6 +20,8 @@ pub struct Hint {
     pub dirty: bool,
     /// Exact file, when the app reports it (Orca).
     pub path: Option<PathBuf>,
+    /// The viewer shows the rendered note; `None` when it can't be told.
+    pub reading: Option<bool>,
 }
 
 pub fn active() -> Option<(App, Hint)> {
@@ -38,7 +40,35 @@ pub fn active() -> Option<(App, Hint)> {
     if app == App::Orca {
         hint.path = crate::orca::active_file();
     }
+    match app {
+        App::Obsidian => hint.reading = hint.folder.as_deref().and_then(obsidian_reading),
+        App::VsCode => hint.reading = vscode_reading().or(hint.reading),
+        _ => {}
+    }
     Some((app, hint))
+}
+
+/// Whether a gesture in the focused window should highlight. Highlights
+/// only show in rendered views, so editors are left alone.
+pub fn reading_view() -> bool {
+    active().is_none_or(|(_, hint)| hint.reading != Some(false))
+}
+
+/// The VS Code extension records whether the focused window shows a
+/// Markdown preview, since the title's `Preview` prefix is translated.
+fn vscode_reading() -> Option<bool> {
+    let state = std::fs::read_to_string(std::env::temp_dir().join("risco-vscode.json")).ok()?;
+    serde_json::from_str::<serde_json::Value>(&state).ok()?["reading"].as_bool()
+}
+
+/// The Obsidian plugin records whether the vault's active note is in
+/// reading view; the title doesn't say.
+fn obsidian_reading(vault_name: &str) -> Option<bool> {
+    let vault = crate::locate::obsidian_vaults()
+        .into_iter()
+        .find(|v| v.file_name().is_some_and(|n| n.to_string_lossy() == vault_name))?;
+    let state = std::fs::read_to_string(vault.join(".obsidian/plugins/risco/state.json")).ok()?;
+    serde_json::from_str::<serde_json::Value>(&state).ok()?["reading"].as_bool()
 }
 
 pub fn parse_title(app: App, title: &str) -> Hint {
@@ -49,12 +79,14 @@ pub fn parse_title(app: App, title: &str) -> Hint {
             let first = parts.first().copied().unwrap_or_default();
             let dirty = first.starts_with('●');
             let name = first.trim_start_matches('●').trim();
-            let name = name.strip_prefix("Preview ").unwrap_or(name);
+            let preview = name.strip_prefix("Preview ");
+            let name = preview.unwrap_or(name);
             Hint {
                 name: (!name.is_empty()).then(|| name.to_string()),
                 folder: (parts.len() > 2).then(|| parts[1].to_string()),
                 dirty,
                 path: None,
+                reading: Some(preview.is_some()),
             }
         }
         // `nota - Vault - Obsidian v1.8.9`
@@ -63,6 +95,7 @@ pub fn parse_title(app: App, title: &str) -> Hint {
             folder: (parts.len() >= 3).then(|| parts[parts.len() - 2].to_string()),
             dirty: false,
             path: None,
+            reading: None,
         },
         // The title carries nothing; the file comes from Orca's state.
         App::Orca => Hint::default(),
@@ -75,6 +108,7 @@ pub fn parse_title(app: App, title: &str) -> Hint {
             folder: None,
             dirty: title.starts_with('*') || title.starts_with('●'),
             path: None,
+            reading: None,
         },
     }
 }
@@ -88,11 +122,18 @@ mod tests {
         let h = parse_title(App::VsCode, "● notas.md - apuntes - Visual Studio Code");
         assert_eq!(
             h,
-            Hint { name: Some("notas.md".into()), folder: Some("apuntes".into()), dirty: true, path: None }
+            Hint {
+                name: Some("notas.md".into()),
+                folder: Some("apuntes".into()),
+                dirty: true,
+                path: None,
+                reading: Some(false),
+            }
         );
         let h = parse_title(App::VsCode, "Preview notas.md - apuntes - Visual Studio Code");
         assert_eq!(h.name.as_deref(), Some("notas.md"));
         assert!(!h.dirty);
+        assert_eq!(h.reading, Some(true));
     }
 
     #[test]
