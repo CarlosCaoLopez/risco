@@ -4,6 +4,10 @@
 
 <h1 align="center">Risco</h1>
 
+<p align="center">
+  English · <a href="docs/README.es.md">Español</a> · <a href="docs/README.gl.md">Galego</a> · <a href="docs/README.fr.md">Français</a> · <a href="docs/README.pt-BR.md">Português (Brasil)</a> · <a href="docs/README.ja.md">日本語</a> · <a href="docs/README.ko.md">한국어</a> · <a href="docs/README.zh-CN.md">简体中文</a> · <a href="docs/README.tr.md">Türkçe</a> · <a href="docs/README.az.md">Azərbaycanca</a> · <a href="docs/README.hi.md">हिन्दी</a>
+</p>
+
 <h3 align="center">Highlight any Markdown. Without touching it.</h3>
 
 <p align="center">
