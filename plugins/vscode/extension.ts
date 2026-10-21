@@ -39,15 +39,14 @@ export function activate(ctx: vscode.ExtensionContext) {
 
   return {
     extendMarkdownIt(md: MarkdownIt) {
-      // A trailing token that carries the note's records into the preview.
+      // A trailing token where the note's records go into the preview.
       md.core.ruler.push("risco", (state) => {
-        const env = state.env as { currentDocument?: vscode.Uri } | undefined;
-        const token = new state.Token("risco_data", "", 0);
-        token.content = attr(records(env?.currentDocument));
-        state.tokens.push(token);
+        state.tokens.push(new state.Token("risco_data", "", 0));
       });
-      md.renderer.rules.risco_data = (tokens, idx) =>
-        `<div class="risco-data" hidden data-records="${tokens[idx].content}"></div>`;
+      // VS Code caches tokens until the note itself changes, so the sidecar
+      // is read here, on every render, not when tokenizing.
+      md.renderer.rules.risco_data = (_tokens, _idx, _options, env: { currentDocument?: vscode.Uri } | undefined) =>
+        `<div class="risco-data" hidden data-records="${attr(records(env?.currentDocument))}"></div>`;
       return md;
     },
   };
