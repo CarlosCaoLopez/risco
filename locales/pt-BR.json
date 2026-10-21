@@ -20,7 +20,7 @@
   "modifier.shift": "Shift",
   "effects.title": "Efeitos",
   "effects.animation": "Animação do marca-texto",
-  "effects.animation.hint": "Um marca-texto segue o cursor enquanto você seleciona.",
+  "effects.animation.hint": "A tinta é desenhada sob o cursor enquanto você seleciona.",
   "effects.sound": "Som de papel",
   "effects.sound.hint": "A ponta de feltro raspando o papel e o clique da tampa.",
   "effects.volume": "Volume",

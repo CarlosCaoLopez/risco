@@ -20,7 +20,7 @@
   "modifier.shift": "Shift",
   "effects.title": "エフェクト",
   "effects.animation": "マーカーのアニメーション",
-  "effects.animation.hint": "選択中、マーカーがカーソルについてきます。",
+  "effects.animation.hint": "選択中、カーソルの下にインクが描かれます。",
   "effects.sound": "紙の音",
   "effects.sound.hint": "フェルトペンが紙をこする音と、キャップのカチッという音。",
   "effects.volume": "音量",

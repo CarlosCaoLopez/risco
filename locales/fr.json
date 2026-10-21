@@ -20,7 +20,7 @@
   "modifier.shift": "Maj",
   "effects.title": "Effets",
   "effects.animation": "Animation du surligneur",
-  "effects.animation.hint": "Un surligneur suit le curseur pendant la sélection.",
+  "effects.animation.hint": "L’encre se dessine sous le curseur pendant la sélection.",
   "effects.sound": "Bruit de papier",
   "effects.sound.hint": "La pointe en feutre qui frotte le papier et le clic du capuchon.",
   "effects.volume": "Volume",

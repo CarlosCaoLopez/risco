@@ -20,7 +20,7 @@
   "modifier.shift": "Mayús",
   "effects.title": "Efectos",
   "effects.animation": "Animación del rotulador",
-  "effects.animation.hint": "Un rotulador sigue al cursor mientras seleccionas.",
+  "effects.animation.hint": "La tinta se dibuja bajo el cursor mientras seleccionas.",
   "effects.sound": "Sonido de papel",
   "effects.sound.hint": "Fieltro rozando el papel y el clic del capuchón.",
   "effects.volume": "Volumen",

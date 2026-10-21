@@ -20,7 +20,7 @@
   "modifier.shift": "Shift",
   "effects.title": "Effects",
   "effects.animation": "Marker animation",
-  "effects.animation.hint": "A marker follows the cursor while you select.",
+  "effects.animation.hint": "The ink is drawn under the cursor while you select.",
   "effects.sound": "Paper sound",
   "effects.sound.hint": "Felt tip brushing paper and the click of the cap.",
   "effects.volume": "Volume",

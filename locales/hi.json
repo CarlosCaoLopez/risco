@@ -20,7 +20,7 @@
   "modifier.shift": "Shift",
   "effects.title": "इफ़ेक्ट",
   "effects.animation": "हाइलाइटर एनिमेशन",
-  "effects.animation.hint": "चुनते समय एक हाइलाइटर कर्सर के साथ चलता है।",
+  "effects.animation.hint": "चुनते समय कर्सर के नीचे स्याही खिंचती है।",
   "effects.sound": "कागज़ की आवाज़",
   "effects.sound.hint": "कागज़ पर रगड़ती फ़ेल्ट टिप और ढक्कन की क्लिक।",
   "effects.volume": "आवाज़",
