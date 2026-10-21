@@ -43,11 +43,25 @@ its plugin in every Obsidian vault and in VS Code on its own.
 
 ## Hold. Drag. Highlighted.
 
-Hold <kbd>Ctrl</kbd> (<kbd>⌥</kbd> on macOS) and drag over any text in Obsidian,
-the VS Code preview or Orca. It sounds like a felt-tip pen,
-and the highlight stays.
+Hold <kbd>Ctrl</kbd> (<kbd>⌥</kbd> on macOS) and drag over any text in
+Obsidian's reading view, the VS Code preview or Orca. It sounds like a
+felt-tip pen, and the highlight stays.
 
 <!-- demo.gif -->
+
+<br>
+
+## Read first.
+
+Highlights live on the rendered page, so switch to it before you drag:
+
+| | |
+|:--|:--|
+| **Obsidian** | Reading view: <kbd>Ctrl</kbd>&thinsp;<kbd>E</kbd> (<kbd>⌘</kbd>&thinsp;<kbd>E</kbd>), or the book icon at the top right of the note. |
+| **VS Code** | Markdown preview: <kbd>Ctrl</kbd>&thinsp;<kbd>Shift</kbd>&thinsp;<kbd>V</kbd> (<kbd>⇧</kbd>&thinsp;<kbd>⌘</kbd>&thinsp;<kbd>V</kbd>), or <kbd>Ctrl</kbd>&thinsp;<kbd>K</kbd> <kbd>V</kbd> to open it beside the editor. Click the preview, then drag. |
+| **Orca** | Nothing to switch: highlight right in the editor. |
+
+In Obsidian's editing view or the VS Code editor, the gesture does nothing.
 
 <br>
 
