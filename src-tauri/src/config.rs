@@ -28,6 +28,8 @@ pub struct Config {
     pub seen_viewers: Vec<PathBuf>,
     /// Set once the first launch has switched on autostart.
     pub first_run_done: bool,
+    /// Interface language; `None` follows the system.
+    pub language: Option<String>,
 }
 
 impl Default for Config {
@@ -43,6 +45,7 @@ impl Default for Config {
             volume: 0.6,
             seen_viewers: Vec::new(),
             first_run_done: false,
+            language: None,
         }
     }
 }

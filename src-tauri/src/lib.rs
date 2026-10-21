@@ -1,6 +1,7 @@
 mod config;
 mod follow;
 mod highlight;
+mod i18n;
 mod input;
 mod locate;
 mod orca;
@@ -26,7 +27,6 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, WebviewUrl, WebviewWindowBuil
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
-const COLOR_LABELS: [&str; 5] = ["Amarillo", "Rosa", "Verde", "Azul", "Lila"];
 const COLOR_KEYS: [Code; 5] = [Code::Digit1, Code::Digit2, Code::Digit3, Code::Digit4, Code::Digit5];
 
 struct AppState {
@@ -40,6 +40,10 @@ struct TrayItems {
     enabled: CheckMenuItem<Wry>,
     sound: CheckMenuItem<Wry>,
     colors: Vec<CheckMenuItem<Wry>>,
+    color_menu: Submenu<Wry>,
+    undo: MenuItem<Wry>,
+    settings: MenuItem<Wry>,
+    quit: MenuItem<Wry>,
 }
 
 #[derive(Serialize)]
@@ -50,6 +54,8 @@ struct Snapshot {
     detected_roots: Vec<PathBuf>,
     autostart: bool,
     accessibility: bool,
+    /// The language the interface is in, resolved from `config.language`.
+    locale: &'static str,
 }
 
 fn update_config(app: &AppHandle, f: impl FnOnce(&mut Config)) {
@@ -59,6 +65,7 @@ fn update_config(app: &AppHandle, f: impl FnOnce(&mut Config)) {
         f(&mut cfg);
         cfg.clone()
     };
+    i18n::set(cfg.language.as_deref());
     let _ = cfg.save();
     sync_tray(app, &cfg);
     let _ = app.emit("config", &cfg);
@@ -70,7 +77,14 @@ fn sync_tray(app: &AppHandle, cfg: &Config) {
     let _ = items.sound.set_checked(cfg.sound);
     for (item, color) in items.colors.iter().zip(mdmark::COLORS) {
         let _ = item.set_checked(cfg.color == color);
+        let _ = item.set_text(i18n::t(&format!("color.{color}")));
     }
+    let _ = items.enabled.set_text(i18n::t("tray.enabled"));
+    let _ = items.sound.set_text(i18n::t("tray.sound"));
+    let _ = items.color_menu.set_text(i18n::t("pen.title"));
+    let _ = items.undo.set_text(i18n::t("tray.undo"));
+    let _ = items.settings.set_text(i18n::t("tray.settings"));
+    let _ = items.quit.set_text(i18n::t("tray.quit"));
 }
 
 #[tauri::command]
@@ -81,6 +95,7 @@ fn snapshot(app: AppHandle, state: tauri::State<AppState>) -> Snapshot {
         viewers: plugins::viewers(),
         autostart: app.autolaunch().is_enabled().unwrap_or(false),
         accessibility: permissions::trusted(false),
+        locale: i18n::current(),
         config,
     }
 }
@@ -141,17 +156,18 @@ fn keep_viewers(app: AppHandle) {
             let mut done = Vec::new();
             for (v, result) in &results {
                 match result {
-                    Ok(()) => done.push(if v.kind == "vscode" { "VS Code".to_string() } else { format!("«{}»", v.name) }),
+                    Ok(()) if v.kind == "vscode" => done.push("VS Code".to_string()),
+                    Ok(()) => done.push(i18n::tf("notify.vault", &[("name", &v.name)])),
                     Err(e) if reported.insert(v.path.clone()) => {
-                        highlight::notify(&app, &format!("No pude activar Risco en {}: {e}", v.name));
+                        highlight::notify(&app, &i18n::tf("notify.activate_failed", &[("name", &v.name), ("error", e)]));
                     }
                     Err(_) => {}
                 }
             }
             if !done.is_empty() {
                 let obsidian = results.iter().any(|(v, r)| v.kind == "obsidian" && r.is_ok());
-                let tail = if obsidian { "Recarga Obsidian para ver los subrayados." } else { "Reabre la vista previa." };
-                highlight::notify(&app, &format!("Risco activado en {}. {tail}", done.join(", ")));
+                let tail = i18n::t(if obsidian { "notify.reload_obsidian" } else { "notify.reopen_preview" });
+                highlight::notify(&app, &i18n::tf("notify.activated", &[("names", &done.join(", ")), ("tail", &tail)]));
             }
             let fresh: Vec<PathBuf> = results.into_iter().map(|(v, _)| v.path).filter(|p| !seen.contains(p)).collect();
             if !fresh.is_empty() {
@@ -166,9 +182,9 @@ fn undo_last(app: &AppHandle) {
     let state = app.state::<AppState>();
     let last = std::mem::take(&mut *state.undo.lock().expect("undo lock"));
     if last.is_empty() {
-        highlight::notify(app, "No hay nada que deshacer.");
+        highlight::notify(app, &i18n::t("notify.nothing_to_undo"));
     } else if let Err(e) = last.iter().try_for_each(highlight::apply_change) {
-        highlight::notify(app, &format!("No se pudo deshacer: {e}"));
+        highlight::notify(app, &i18n::tf("notify.undo_failed", &[("error", &e.to_string())]));
     }
 }
 
@@ -187,23 +203,23 @@ fn open_settings(app: &AppHandle) {
 }
 
 fn build_tray(app: &AppHandle, cfg: &Config) -> tauri::Result<()> {
-    let enabled = CheckMenuItem::with_id(app, "enabled", "Activado", true, cfg.enabled, None::<&str>)?;
+    let enabled = CheckMenuItem::with_id(app, "enabled", i18n::t("tray.enabled"), true, cfg.enabled, None::<&str>)?;
     let colors = mdmark::COLORS
         .iter()
-        .zip(COLOR_LABELS)
         .enumerate()
-        .map(|(i, (id, label))| {
+        .map(|(i, id)| {
             let accel = format!("Ctrl+Alt+{}", i + 1);
+            let label = i18n::t(&format!("color.{id}"));
             CheckMenuItem::with_id(app, format!("color:{id}"), label, true, cfg.color == *id, Some(accel))
         })
         .collect::<tauri::Result<Vec<_>>>()?;
     let color_refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
         colors.iter().map(|c| c as &dyn tauri::menu::IsMenuItem<Wry>).collect();
-    let color_menu = Submenu::with_items(app, "Rotulador", true, &color_refs)?;
-    let sound = CheckMenuItem::with_id(app, "sound", "Sonido", true, cfg.sound, None::<&str>)?;
-    let undo = MenuItem::with_id(app, "undo", "Deshacer último", true, None::<&str>)?;
-    let settings = MenuItem::with_id(app, "settings", "Ajustes…", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;
+    let color_menu = Submenu::with_items(app, i18n::t("pen.title"), true, &color_refs)?;
+    let sound = CheckMenuItem::with_id(app, "sound", i18n::t("tray.sound"), true, cfg.sound, None::<&str>)?;
+    let undo = MenuItem::with_id(app, "undo", i18n::t("tray.undo"), true, None::<&str>)?;
+    let settings = MenuItem::with_id(app, "settings", i18n::t("tray.settings"), true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", i18n::t("tray.quit"), true, None::<&str>)?;
     let sep = || PredefinedMenuItem::separator(app);
     let menu = Menu::with_items(
         app,
@@ -230,7 +246,7 @@ fn build_tray(app: &AppHandle, cfg: &Config) -> tauri::Result<()> {
         })
         .build(app)?;
 
-    app.manage(TrayItems { enabled, sound, colors });
+    app.manage(TrayItems { enabled, sound, colors, color_menu, undo, settings, quit });
     Ok(())
 }
 
@@ -258,6 +274,8 @@ pub fn run() {
         .setup(move |app| {
             let handle = app.handle().clone();
             let cfg = config.read().expect("config lock").clone();
+
+            i18n::set(cfg.language.as_deref());
 
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -289,7 +307,7 @@ pub fn run() {
             // Show the settings when something still needs the user: a folder
             // of notes, or on macOS the Accessibility permission.
             if !permissions::trusted(true) {
-                highlight::notify(&handle, "Permite Risco en Ajustes del Sistema › Privacidad y seguridad › Accesibilidad y vuelve a abrirlo.");
+                highlight::notify(&handle, &i18n::t("notify.accessibility"));
                 open_settings(&handle);
             } else if locate::roots(&cfg.roots).is_empty() {
                 open_settings(&handle);

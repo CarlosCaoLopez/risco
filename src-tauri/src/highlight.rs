@@ -5,7 +5,7 @@ use crate::config::Config;
 use crate::input::Gesture;
 use crate::overlay::{self, MarkerEvent};
 use crate::sound::Sound;
-use crate::{locate, selection, store, window};
+use crate::{i18n, locate, selection, store, window};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex, RwLock};
@@ -93,17 +93,17 @@ pub fn spawn(app: AppHandle, config: Arc<RwLock<Config>>, sound: Sound, undo: Un
 
 fn apply(cfg: &Config, undo: &Undo) -> Result<mdmark::Action, String> {
     selection::settle();
-    let text = selection::selected_text().ok_or("No hay texto seleccionado.")?;
+    let text = selection::selected_text().ok_or_else(|| i18n::t("error.no_selection"))?;
     let (app, hint) = window::active().unwrap_or((window::App::Other, window::Hint::default()));
     if hint.dirty {
-        return Err("El archivo tiene cambios sin guardar. Guárdalo y vuelve a subrayar.".into());
+        return Err(i18n::t("error.unsaved"));
     }
     let roots = locate::roots(&cfg.roots);
     let path = locate::find(&roots, &hint, &text).ok_or_else(|| {
         if roots.is_empty() {
-            "No hay carpetas configuradas. Añade la carpeta de tus notas en Ajustes.".to_string()
+            i18n::t("error.no_roots")
         } else {
-            "No encontré ese texto en ningún .md de tus carpetas.".to_string()
+            i18n::t("error.not_found")
         }
     })?;
 

@@ -45,7 +45,7 @@ pub fn viewers() -> Vec<Viewer> {
     if let Some(dir) = vscode_extensions_dir().filter(|d| d.is_dir()) {
         out.push(Viewer {
             kind: "vscode",
-            name: "Vista previa de Markdown".into(),
+            name: crate::i18n::t("plugins.vscode_name"),
             installed: vscode_installed(&dir),
             present: vscode_present(&dir),
             path: dir,
@@ -82,7 +82,7 @@ pub fn install(kind: &str, path: &Path) -> Result<(), String> {
     match kind {
         "obsidian" => install_obsidian(path).map_err(|e| e.to_string()),
         "vscode" => install_vscode(),
-        _ => Err(format!("visor desconocido: {kind}")),
+        _ => Err(crate::i18n::tf("plugins.unknown", &[("kind", kind)])),
     }
 }
 
@@ -167,8 +167,8 @@ fn install_vscode() -> Result<(), String> {
     let _ = std::fs::remove_file(&vsix);
     match result {
         Some(out) if out.status.success() => Ok(()),
-        Some(out) => Err(format!("VS Code no pudo instalarla: {}", String::from_utf8_lossy(&out.stderr).trim())),
-        None => Err("No encontré el comando `code` de VS Code.".into()),
+        Some(out) => Err(crate::i18n::tf("plugins.vscode_failed", &[("error", String::from_utf8_lossy(&out.stderr).trim())])),
+        None => Err(crate::i18n::t("plugins.no_code")),
     }
 }
 
