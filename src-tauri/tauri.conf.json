@@ -29,8 +29,9 @@
       "icons/icon.ico"
     ],
     "linux": {
-      "deb": { "depends": ["libayatana-appindicator3-1", "libxtst6"] }
+      "deb": { "depends": ["libayatana-appindicator3-1", "libxtst6"] },
+      "rpm": { "depends": ["libayatana-appindicator-gtk3", "libXtst"] }
     },
-    "macOS": { "minimumSystemVersion": "11.0" }
+    "macOS": { "minimumSystemVersion": "11.0", "hardenedRuntime": true }
   }
 }
