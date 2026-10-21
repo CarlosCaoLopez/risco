@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Felt tip on paper, synthesised: band-passed noise whose loudness follows
 //! the pointer speed, plus fibre grain, and a cap click when the stroke ends.
 

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Bundle the VS Code extension and the Obsidian plugin into plugins/dist/,
 // where the app embeds them for "Instalar".
 

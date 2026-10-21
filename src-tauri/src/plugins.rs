@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Install the viewer plugins that paint the sidecar highlights: an Obsidian
 //! plugin per vault and one VS Code extension per user. Both are built into
 //! `plugins/dist/` by `npm run build:plugins` and embedded here.

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // The same catalogs the Rust side embeds (`src-tauri/src/i18n.rs`).
 import en from "../locales/en.json";
 import es from "../locales/es.json";

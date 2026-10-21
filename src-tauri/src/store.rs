@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Highlights kept beside each note in a hidden JSONL file, so the Markdown
 //! stays clean. `notas/clase.md` keeps them in `notas/.clase.md.hl.jsonl`, one
 //! text quote per line; the viewer plugins read it and paint the marks.

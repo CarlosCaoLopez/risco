@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Watches the note folders so a note's sidecar follows it when the note is
 //! moved outside its viewer (file manager, `mv`, git…). Viewer plugins only
 //! see renames made inside the viewer.

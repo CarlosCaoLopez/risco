@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Find text the user selected in a *rendered* Markdown view inside the
 //! Markdown *source*, and wrap it in highlight marks: `<mark class="hl hl-COLOR">`
 //! tags or Orca's `++underline++`.

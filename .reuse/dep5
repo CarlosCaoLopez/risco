@@ -1,0 +1,40 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Risco
+Upstream-Contact: Carlos Cao López <caolopezcarlos@gmail.com>
+Source: https://github.com/CarlosCaoLopez/risco
+
+# Files that cannot carry an SPDX header: JSON has no comments, lockfiles
+# and installer metadata are generated, and images are binary.
+
+Files: *.json *.jsonl .*.jsonl Cargo.lock package-lock.json
+Copyright: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+License: GPL-3.0-or-later
+
+Files: *.toml .gitignore .editorconfig
+Copyright: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+License: GPL-3.0-or-later
+
+Files: *.md examples/*
+Copyright: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+License: GPL-3.0-or-later
+
+Files: .github/*
+Copyright: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+License: GPL-3.0-or-later
+
+Files: app-icon.svg public/* src-tauri/icons/*
+Copyright: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+License: GPL-3.0-or-later
+
+Files: plugins/dist/*
+Copyright: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+License: GPL-3.0-or-later
+
+Files: CODE_OF_CONDUCT.md
+Copyright: 2014-2021 Coraline Ada Ehmke and the Contributor Covenant contributors
+License: CC-BY-4.0
+Comment: Contributor Covenant 2.1, with Risco's contact details filled in.
+
+Files: DCO
+Copyright: 2004, 2006 The Linux Foundation and its contributors.
+License: LicenseRef-DCO

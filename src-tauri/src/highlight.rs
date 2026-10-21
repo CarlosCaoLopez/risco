@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Turns finished gestures into edits: read the selection, find the file,
 //! toggle the highlight, and drive the animation and sound along the way.
 

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Highlights stored outside the source, anchored by the text they cover.
 //!
 //! A [`Quote`] is the highlighted plain text plus a little context on either

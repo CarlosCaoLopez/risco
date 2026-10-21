@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Orca's window title is just "Orca", but its live profile state (SQLite)
 //! records the active worktree and the file open in each one.
 

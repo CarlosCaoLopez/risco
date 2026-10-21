@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! macOS lets an app watch the mouse and keyboard, and send the copy
 //! shortcut, only after the user allows it under Accessibility. Elsewhere
 //! there is nothing to ask for.
