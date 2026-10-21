@@ -13,6 +13,8 @@ interface Config {
   animation: boolean;
   sound: boolean;
   volume: number;
+  seen_viewers: string[];
+  first_run_done: boolean;
 }
 
 interface Viewer {
@@ -20,6 +22,7 @@ interface Viewer {
   name: string;
   path: string;
   installed: boolean;
+  present: boolean;
 }
 
 interface Snapshot {
@@ -152,7 +155,7 @@ function renderViewers(viewers: Viewer[]) {
       <button class="pill">Instalar</button>`);
     const btn = row.querySelector("button")!;
     const done = () => {
-      btn.textContent = "Instalado";
+      btn.textContent = "Activo";
       btn.classList.add("done");
     };
     if (v.installed) done();

@@ -15,8 +15,10 @@ use config::Config;
 use highlight::Undo;
 use serde::Serialize;
 use sound::Sound;
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::{mpsc, Arc, Mutex, RwLock};
+use std::time::Duration;
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Emitter, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder, Wry};
@@ -82,7 +84,10 @@ fn snapshot(app: AppHandle, state: tauri::State<AppState>) -> Snapshot {
 
 #[tauri::command]
 fn save_config(app: AppHandle, config: Config) {
-    update_config(&app, |c| *c = config);
+    // The app's own bookkeeping may have moved on since the window read it.
+    update_config(&app, |c| {
+        *c = Config { seen_viewers: std::mem::take(&mut c.seen_viewers), first_run_done: c.first_run_done, ..config }
+    });
 }
 
 #[tauri::command]
@@ -113,6 +118,40 @@ fn test_sound(state: tauri::State<AppState>, volume: f32) {
 fn set_autostart(app: AppHandle, on: bool) -> Result<(), String> {
     let launcher = app.autolaunch();
     if on { launcher.enable() } else { launcher.disable() }.map_err(|e| e.to_string())
+}
+
+/// How often new vaults and outdated plugins are looked for.
+const VIEWERS_EVERY: Duration = Duration::from_secs(300);
+
+/// Keeps the viewer plugins installed and current without the user asking.
+fn keep_viewers(app: AppHandle) {
+    std::thread::spawn(move || {
+        let mut reported = HashSet::new();
+        loop {
+            let seen = app.state::<AppState>().config.read().expect("config lock").seen_viewers.clone();
+            let results = plugins::sync(&seen);
+            let mut done = Vec::new();
+            for (v, result) in &results {
+                match result {
+                    Ok(()) => done.push(if v.kind == "vscode" { "VS Code".to_string() } else { format!("«{}»", v.name) }),
+                    Err(e) if reported.insert(v.path.clone()) => {
+                        highlight::notify(&app, &format!("No pude activar Risco en {}: {e}", v.name));
+                    }
+                    Err(_) => {}
+                }
+            }
+            if !done.is_empty() {
+                let obsidian = results.iter().any(|(v, r)| v.kind == "obsidian" && r.is_ok());
+                let tail = if obsidian { "Recarga Obsidian para ver los subrayados." } else { "Reabre la vista previa." };
+                highlight::notify(&app, &format!("Risco activado en {}. {tail}", done.join(", ")));
+            }
+            let fresh: Vec<PathBuf> = results.into_iter().map(|(v, _)| v.path).filter(|p| !seen.contains(p)).collect();
+            if !fresh.is_empty() {
+                update_config(&app, |c| c.seen_viewers.extend(fresh));
+            }
+            std::thread::sleep(VIEWERS_EVERY);
+        }
+    });
 }
 
 fn undo_last(app: &AppHandle) {
@@ -232,6 +271,12 @@ pub fn run() {
             follow::spawn(config.clone());
             highlight::spawn(handle.clone(), config.clone(), sound.clone(), undo.clone(), rx);
             app.manage(AppState { config: config.clone(), sound, undo });
+            keep_viewers(handle.clone());
+
+            if !cfg.first_run_done {
+                let _ = handle.autolaunch().enable();
+                update_config(&handle, |c| c.first_run_done = true);
+            }
 
             // First run: show the settings so the user can point at their notes.
             if locate::roots(&cfg.roots).is_empty() {

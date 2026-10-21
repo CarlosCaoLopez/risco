@@ -23,6 +23,11 @@ pub struct Config {
     pub animation: bool,
     pub sound: bool,
     pub volume: f32,
+    /// Viewers the plugin has already been offered to, so one the user
+    /// removed it from doesn't get it back.
+    pub seen_viewers: Vec<PathBuf>,
+    /// Set once the first launch has switched on autostart.
+    pub first_run_done: bool,
 }
 
 impl Default for Config {
@@ -36,6 +41,8 @@ impl Default for Config {
             animation: true,
             sound: true,
             volume: 0.6,
+            seen_viewers: Vec::new(),
+            first_run_done: false,
         }
     }
 }

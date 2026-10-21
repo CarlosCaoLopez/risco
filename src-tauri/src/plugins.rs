@@ -25,23 +25,53 @@ pub struct Viewer {
     pub kind: &'static str,
     pub name: String,
     pub path: PathBuf,
+    /// This app's version of the plugin is in place.
     pub installed: bool,
+    /// Some version of the plugin is there, maybe an older one.
+    pub present: bool,
 }
 
 pub fn viewers() -> Vec<Viewer> {
     let mut out: Vec<Viewer> = crate::locate::obsidian_vaults()
         .into_iter()
-        .map(|p| Viewer { kind: "obsidian", name: folder_name(&p), installed: obsidian_installed(&p), path: p })
+        .map(|p| Viewer {
+            kind: "obsidian",
+            name: folder_name(&p),
+            installed: obsidian_installed(&p),
+            present: obsidian_present(&p),
+            path: p,
+        })
         .collect();
     if let Some(dir) = vscode_extensions_dir().filter(|d| d.is_dir()) {
         out.push(Viewer {
             kind: "vscode",
             name: "Vista previa de Markdown".into(),
             installed: vscode_installed(&dir),
+            present: vscode_present(&dir),
             path: dir,
         });
     }
     out
+}
+
+/// Installs the plugin in every viewer that has never been seen, and
+/// updates it wherever an older version is in place. A viewer the user
+/// removed the plugin from is left alone.
+pub fn sync(seen: &[PathBuf]) -> Vec<(Viewer, Result<(), String>)> {
+    viewers()
+        .into_iter()
+        .filter(|v| !v.installed && (v.present || !seen.contains(&v.path)))
+        .map(|v| {
+            let result = install(v.kind, &v.path);
+            (v, result)
+        })
+        .collect()
+}
+
+/// The version the build stamped into the embedded plugins.
+fn version() -> String {
+    let manifest: serde_json::Value = serde_json::from_str(OBSIDIAN_FILES[1].1).unwrap_or_default();
+    manifest["version"].as_str().unwrap_or_default().to_string()
 }
 
 fn folder_name(p: &Path) -> String {
@@ -56,9 +86,16 @@ pub fn install(kind: &str, path: &Path) -> Result<(), String> {
     }
 }
 
-fn obsidian_installed(vault: &Path) -> bool {
-    let enabled = read_json(&vault.join(".obsidian/community-plugins.json"));
+fn obsidian_present(vault: &Path) -> bool {
     vault.join(".obsidian/plugins").join(PLUGIN_ID).join("main.js").is_file()
+        || vault.join(".obsidian/plugins").join(OLD_ID).is_dir()
+}
+
+fn obsidian_installed(vault: &Path) -> bool {
+    let dir = vault.join(".obsidian/plugins").join(PLUGIN_ID);
+    let enabled = read_json(&vault.join(".obsidian/community-plugins.json"));
+    dir.join("main.js").is_file()
+        && read_json(&dir.join("manifest.json"))["version"] == version().as_str()
         && enabled.as_array().is_some_and(|a| a.iter().any(|s| s == PLUGIN_ID))
 }
 
@@ -101,11 +138,20 @@ fn vscode_extensions_dir() -> Option<PathBuf> {
     Some(dirs::home_dir()?.join(".vscode/extensions"))
 }
 
-fn vscode_installed(dir: &Path) -> bool {
-    let prefix = format!("{EXTENSION_ID}-");
+fn vscode_extensions(dir: &Path) -> Vec<String> {
     std::fs::read_dir(dir)
-        .map(|it| it.filter_map(Result::ok).any(|e| e.file_name().to_string_lossy().starts_with(&prefix)))
-        .unwrap_or(false)
+        .map(|it| it.filter_map(Result::ok).map(|e| e.file_name().to_string_lossy().into_owned()).collect())
+        .unwrap_or_default()
+}
+
+fn vscode_present(dir: &Path) -> bool {
+    let prefixes = [format!("{EXTENSION_ID}-"), format!("{OLD_ID}.{OLD_ID}-")];
+    vscode_extensions(dir).iter().any(|e| prefixes.iter().any(|p| e.starts_with(p)))
+}
+
+fn vscode_installed(dir: &Path) -> bool {
+    let current = format!("{EXTENSION_ID}-{}", version());
+    vscode_extensions(dir).contains(&current)
 }
 
 /// Hands the packaged extension to VS Code's own CLI, which works while it runs.
@@ -154,6 +200,26 @@ mod tests {
         assert!(!dir.join(".obsidian/snippets/liquid-highlight.css").exists());
         assert!(!dir.join(".obsidian/plugins/subrayador").exists());
         std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn sync_policy() {
+        let dir = std::env::temp_dir().join(format!("mh-sync-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join(".obsidian/plugins/subrayador")).unwrap();
+        assert!(obsidian_present(&dir) && !obsidian_installed(&dir));
+        install_obsidian(&dir).unwrap();
+        assert!(obsidian_installed(&dir));
+
+        // An older copy counts as present but not installed.
+        let manifest = dir.join(".obsidian/plugins/risco/manifest.json");
+        std::fs::write(&manifest, r#"{"version":"0.0.1"}"#).unwrap();
+        assert!(obsidian_present(&dir) && !obsidian_installed(&dir));
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn embedded_plugins_carry_a_version() {
+        assert!(!version().is_empty());
     }
 
     #[test]

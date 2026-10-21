@@ -3,7 +3,7 @@
 
 import { createVSIX } from "@vscode/vsce";
 import { build } from "esbuild";
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const css = "assets/liquid-highlight.css";
@@ -39,9 +39,17 @@ await Promise.all([
   }),
 ]);
 
-copyFileSync("plugins/vscode/package.json", `${out}/vscode/package.json`);
+// Both plugins take the app's version, so the app can tell when the
+// installed copy is out of date.
+const { version } = JSON.parse(readFileSync("src-tauri/tauri.conf.json", "utf8"));
+const withVersion = (from, to) => {
+  const json = JSON.parse(readFileSync(from, "utf8"));
+  writeFileSync(to, JSON.stringify({ ...json, version }, null, 2) + "\n");
+};
+
+withVersion("plugins/vscode/package.json", `${out}/vscode/package.json`);
 copyFileSync(css, `${out}/vscode/liquid-highlight.css`);
-copyFileSync("plugins/obsidian/manifest.json", `${out}/obsidian/manifest.json`);
+withVersion("plugins/obsidian/manifest.json", `${out}/obsidian/manifest.json`);
 copyFileSync(css, `${out}/obsidian/styles.css`);
 
 // The app installs the extension with `code --install-extension`.
