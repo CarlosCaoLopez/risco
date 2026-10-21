@@ -11,6 +11,13 @@
 <h3 align="center">İstənilən Markdown-u vurğulayın. Ona toxunmadan.</h3>
 
 <p align="center">
+  <a href="https://api.reuse.software/info/github.com/CarlosCaoLopez/risco"><img src="https://api.reuse.software/badge/github.com/CarlosCaoLopez/risco" alt="REUSE status"></a>
+  <a href="https://www.bestpractices.dev/projects/0000"><img src="https://www.bestpractices.dev/projects/0000/badge" alt="OpenSSF Best Practices"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/CarlosCaoLopez/risco"><img src="https://api.scorecard.dev/projects/github.com/CarlosCaoLopez/risco/badge" alt="OpenSSF Scorecard"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later"></a>
+</p>
+
+<p align="center">
   Pulsuz və açıq mənbəli. Linux, Windows və macOS üçün.
   <br>
   <a href="https://github.com/CarlosCaoLopez/risco/releases/latest">Yüklə&nbsp;&rsaquo;</a>
@@ -123,3 +130,9 @@ Linux-da həmçinin adi Tauri/WebKitGTK paketləri, `libxtst` və bir appindicat
 kitabxanası lazımdır.
 
 Tətbiq görüntüləyici plaginlərini ilk işə düşəndə özü quraşdırır.
+
+<br>
+
+## Lisenziya
+
+Risco [GNU General Public License v3.0 və ya daha sonrakı](../LICENSE) altında yayımlanan azad proqramdır və **heç bir zəmanət olmadan** paylanır. Töhfə vermək üçün [CONTRIBUTING.md](../CONTRIBUTING.md) (ingiliscə) faylını oxuyun; təhlükəsizlik problemlərini [SECURITY.md](../SECURITY.md) üzrə gizli bildirin.

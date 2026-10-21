@@ -11,6 +11,13 @@
 <h3 align="center">किसी भी Markdown को हाइलाइट करें। उसे छुए बिना।</h3>
 
 <p align="center">
+  <a href="https://api.reuse.software/info/github.com/CarlosCaoLopez/risco"><img src="https://api.reuse.software/badge/github.com/CarlosCaoLopez/risco" alt="REUSE status"></a>
+  <a href="https://www.bestpractices.dev/projects/0000"><img src="https://www.bestpractices.dev/projects/0000/badge" alt="OpenSSF Best Practices"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/CarlosCaoLopez/risco"><img src="https://api.scorecard.dev/projects/github.com/CarlosCaoLopez/risco/badge" alt="OpenSSF Scorecard"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later"></a>
+</p>
+
+<p align="center">
   मुफ़्त और ओपन सोर्स। Linux, Windows और macOS के लिए।
   <br>
   <a href="https://github.com/CarlosCaoLopez/risco/releases/latest">डाउनलोड करें&nbsp;&rsaquo;</a>
@@ -113,3 +120,9 @@ npm run tauri build
 Linux पर आपको सामान्य Tauri/WebKitGTK पैकेज, `libxtst` और एक appindicator लाइब्रेरी भी चाहिए।
 
 ऐप पहली बार चलने पर व्यूअर प्लगइन खुद इंस्टॉल कर देता है।
+
+<br>
+
+## लाइसेंस
+
+Risco [GNU General Public License v3.0 या बाद के संस्करण](../LICENSE) के तहत मुक्त सॉफ़्टवेयर है, और **बिना किसी वारंटी** के वितरित किया जाता है। योगदान करने के लिए [CONTRIBUTING.md](../CONTRIBUTING.md) (अंग्रेज़ी) पढ़ें; सुरक्षा समस्याओं की रिपोर्ट [SECURITY.md](../SECURITY.md) के अनुसार निजी रूप से करें।
