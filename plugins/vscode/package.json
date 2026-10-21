@@ -3,7 +3,7 @@
   "displayName": "Risco",
   "description": "Muestra en la vista previa de Markdown los subrayados hechos con Risco.",
   "publisher": "risco",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": { "vscode": "^1.90.0" },
   "categories": ["Other"],
   "main": "./extension.js",
