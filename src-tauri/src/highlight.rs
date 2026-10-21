@@ -60,6 +60,9 @@ pub fn spawn(app: AppHandle, config: Arc<RwLock<Config>>, sound: Sound, undo: Un
                             sound.speed(0.0);
                         }
                         let result = apply(&cfg, &undo);
+                        if let Err(e) = &result {
+                            eprintln!("risco: error: {e}");
+                        }
                         if cfg.sound {
                             sound.stop(result.is_ok());
                         }
@@ -104,6 +107,7 @@ fn apply(cfg: &Config, undo: &Undo) -> Result<mdmark::Action, String> {
     store::adopt(&path, &roots);
     let edit = store::toggle(&path, &source, &text, &cfg.color, plus)?;
     *undo.lock().expect("undo lock") = commit(&edit.changes).map_err(|e| e.to_string())?;
+    eprintln!("risco: {app:?} {} → {:?}", path.display(), edit.action);
     Ok(edit.action)
 }
 
