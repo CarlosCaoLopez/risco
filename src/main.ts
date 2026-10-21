@@ -2,6 +2,7 @@ import "./styles.css";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
+import { LANGUAGES, setLocale, t, translate } from "./i18n";
 
 type Modifier = "ctrl" | "alt" | "shift" | "meta";
 
@@ -15,6 +16,7 @@ interface Config {
   volume: number;
   seen_viewers: string[];
   first_run_done: boolean;
+  language: string | null;
 }
 
 interface Viewer {
@@ -31,16 +33,11 @@ interface Snapshot {
   detectedRoots: string[];
   autostart: boolean;
   accessibility: boolean;
+  locale: string;
 }
 
-const COLORS: [id: string, label: string][] = [
-  ["yellow", "Amarillo"],
-  ["pink", "Rosa"],
-  ["green", "Verde"],
-  ["blue", "Azul"],
-  ["purple", "Lila"],
-];
-const MOD_LABEL: Record<Modifier, string> = { ctrl: "Ctrl", alt: "Alt", shift: "Mayús", meta: "Super" };
+const COLORS = ["yellow", "pink", "green", "blue", "purple"] as const;
+const modLabel = (m: Modifier) => (m === "shift" ? t("modifier.shift") : { ctrl: "Ctrl", alt: "Alt", meta: "Super" }[m]);
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 let config: Config;
@@ -58,11 +55,11 @@ function toast(text: string) {
 }
 
 /** A marker pen for the cup, cap on top, tinted with its colour. */
-function pen(id: string, label: string): HTMLButtonElement {
+function pen(id: string): HTMLButtonElement {
   const b = document.createElement("button");
   b.className = "pen";
   b.setAttribute("role", "radio");
-  b.setAttribute("aria-label", label);
+  b.dataset.i18nAria = `color.${id}`;
   b.dataset.value = id;
   b.style.setProperty("--c", `var(--${id})`);
   b.innerHTML = `
@@ -101,7 +98,8 @@ function render() {
   $<HTMLInputElement>("sound").checked = config.sound;
   $<HTMLInputElement>("volume").value = String(config.volume);
   $("volume-row").classList.toggle("off", !config.sound);
-  $("mod-key").textContent = MOD_LABEL[config.modifier];
+  $("mod-key").textContent = modLabel(config.modifier);
+  $<HTMLSelectElement>("language").value = config.language ?? "";
 
   for (const p of $("cup").querySelectorAll<HTMLElement>(".pen")) {
     p.setAttribute("aria-checked", String(p.dataset.value === config.color));
@@ -131,7 +129,7 @@ function renderRoots() {
   ul.replaceChildren();
   for (const r of config.roots) {
     const row = li(`<div><strong>${esc(base(r))}</strong><small>${esc(r)}</small></div>
-      <button class="icon-btn" aria-label="Quitar">×</button>`);
+      <button class="icon-btn" aria-label="${t("roots.remove")}">×</button>`);
     row.querySelector("button")!.addEventListener("click", () => {
       config.roots = config.roots.filter((x) => x !== r);
       render();
@@ -140,31 +138,34 @@ function renderRoots() {
     ul.append(row);
   }
   for (const r of detected.filter((d) => !config.roots.includes(d))) {
-    ul.append(li(`<div><strong>${esc(base(r))}</strong><small>${esc(r)}</small></div><span class="tag">detectada</span>`));
+    ul.append(li(`<div><strong>${esc(base(r))}</strong><small>${esc(r)}</small></div><span class="tag">${t("roots.detected")}</span>`));
   }
   if (!ul.children.length) {
-    ul.append(li(`<div class="empty">Aún no hay carpetas. Añade la de tus notas.</div>`));
+    ul.append(li(`<div class="empty">${t("roots.empty")}</div>`));
   }
 }
 
-function renderViewers(viewers: Viewer[]) {
+let viewers: Viewer[] = [];
+
+function renderViewers() {
   const ul = $("viewers");
   ul.replaceChildren();
   for (const v of viewers) {
     const row = li(`<span class="tag">${v.kind === "obsidian" ? "Obsidian" : "VS Code"}</span>
       <div><strong>${esc(v.name)}</strong><small>${esc(v.path)}</small></div>
-      <button class="pill">Instalar</button>`);
+      <button class="pill">${t("viewers.install")}</button>`);
     const btn = row.querySelector("button")!;
     const done = () => {
-      btn.textContent = "Activo";
+      btn.textContent = t("viewers.active");
       btn.classList.add("done");
     };
     if (v.installed) done();
     btn.addEventListener("click", async () => {
       try {
         await invoke("install_plugin", { kind: v.kind, path: v.path });
+        v.installed = true;
         done();
-        toast(v.kind === "obsidian" ? "Plugin activado: recarga Obsidian" : "Extensión instalada: reabre la vista previa");
+        toast(t(v.kind === "obsidian" ? "viewers.installed.obsidian" : "viewers.installed.vscode"));
       } catch (e) {
         toast(String(e));
       }
@@ -172,17 +173,34 @@ function renderViewers(viewers: Viewer[]) {
     ul.append(row);
   }
   if (!viewers.length) {
-    ul.append(li(`<div class="empty">No encontré bóvedas de Obsidian ni VS Code.</div>`));
+    ul.append(li(`<div class="empty">${t("viewers.empty")}</div>`));
   }
+}
+
+/** Put the whole window in `locale`. */
+function localize(locale: string) {
+  setLocale(locale);
+  translate();
+  $<HTMLSelectElement>("language").options[0].text = t("language.system");
+  renderViewers();
 }
 
 async function init() {
   const snap = await invoke<Snapshot>("snapshot");
   config = snap.config;
   detected = snap.detectedRoots;
+  viewers = snap.viewers;
 
   const cup = $("cup");
-  for (const [id, label] of COLORS) cup.append(pen(id, label));
+  for (const id of COLORS) cup.append(pen(id));
+
+  const language = $<HTMLSelectElement>("language");
+  language.append(new Option("", ""), ...LANGUAGES.map(([code, name]) => new Option(name, code)));
+  language.addEventListener("change", () => {
+    config.language = language.value || null;
+    save();
+  });
+  localize(snap.locale);
 
   for (const b of $("modifier").querySelectorAll<HTMLElement>("button")) {
     b.addEventListener("click", () => {
@@ -224,14 +242,14 @@ async function init() {
   $("migrate").addEventListener("click", async () => {
     try {
       const notes = await invoke<number>("migrate_marks");
-      toast(notes ? `Subrayados movidos en ${notes} nota${notes === 1 ? "" : "s"}` : "No había subrayados antiguos");
+      toast(notes ? t(notes === 1 ? "migrate.done.one" : "migrate.done.other", { n: notes }) : t("migrate.none"));
     } catch (err) {
       toast(String(err));
     }
   });
 
   $("add-root").addEventListener("click", async () => {
-    const dir = await open({ directory: true, multiple: false, title: "Carpeta de notas" });
+    const dir = await open({ directory: true, multiple: false, title: t("roots.dialog") });
     if (typeof dir === "string" && !config.roots.includes(dir)) {
       config.roots = [...config.roots, dir];
       render();
@@ -239,12 +257,14 @@ async function init() {
     }
   });
 
-  renderViewers(snap.viewers);
   render();
 
   // The tray and the global shortcuts change settings too.
-  await listen<Config>("config", (e) => {
+  await listen<Config>("config", async (e) => {
+    const relocalize = e.payload.language !== config.language;
     config = e.payload;
+    // Rust resolves "follow the system" to a language, so ask it which.
+    if (relocalize) localize((await invoke<Snapshot>("snapshot")).locale);
     render();
   });
 }
