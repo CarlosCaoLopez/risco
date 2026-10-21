@@ -45,7 +45,7 @@ impl Default for Config {
             modifier: if cfg!(target_os = "macos") { Modifier::Alt } else { Modifier::Ctrl },
             roots: Vec::new(),
             animation: true,
-            sound: true,
+            sound: false,
             volume: 0.6,
             seen_viewers: Vec::new(),
             first_run_done: false,
