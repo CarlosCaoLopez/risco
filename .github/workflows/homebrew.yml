@@ -6,6 +6,11 @@ on:
   release:
     types: [published]
 
+# Only reads this repo's release assets; the push goes to the tap with
+# TAP_TOKEN, not GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
   cask:
     if: ${{ !github.event.release.prerelease }}
@@ -22,7 +27,7 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "sha256=$(sha256sum Risco_${version}_universal.dmg | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           repository: CarlosCaoLopez/homebrew-tap
           token: ${{ secrets.TAP_TOKEN }}
