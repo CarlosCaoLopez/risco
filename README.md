@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="src-tauri/icons/128x128@2x.png" width="128" alt="Subrayador icon">
+  <img src="src-tauri/icons/128x128@2x.png" width="128" alt="Risco icon">
 </p>
 
-<h1 align="center">Subrayador</h1>
+<h1 align="center">Risco</h1>
 
 <h3 align="center">Highlight any Markdown. Without touching it.</h3>
 
@@ -50,7 +50,7 @@ If the editor has unsaved changes, nothing is written.
 ## Private by design.
 
 No account. No network. No analytics.
-Subrayador runs entirely on your computer, and your notes never leave it.
+Risco runs entirely on your computer, and your notes never leave it.
 
 <br>
 

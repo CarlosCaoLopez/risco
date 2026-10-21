@@ -6,15 +6,17 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const PLUGIN_ID: &str = "subrayador";
+const PLUGIN_ID: &str = "risco";
+/// Plugin and extension id from before the app was called Risco.
+const OLD_ID: &str = "subrayador";
 const OBSIDIAN_FILES: [(&str, &str); 3] = [
     ("main.js", include_str!("../../plugins/dist/obsidian/main.js")),
     ("manifest.json", include_str!("../../plugins/dist/obsidian/manifest.json")),
     ("styles.css", include_str!("../../plugins/dist/obsidian/styles.css")),
 ];
-const VSIX: &[u8] = include_bytes!("../../plugins/dist/subrayador.vsix");
+const VSIX: &[u8] = include_bytes!("../../plugins/dist/risco.vsix");
 /// `publisher.name` from `plugins/vscode/package.json`.
-const EXTENSION_ID: &str = "subrayador.subrayador";
+const EXTENSION_ID: &str = "risco.risco";
 /// The snippet earlier versions installed instead of the plugin.
 const OLD_SNIPPET: &str = "liquid-highlight";
 
@@ -60,7 +62,8 @@ fn obsidian_installed(vault: &Path) -> bool {
         && enabled.as_array().is_some_and(|a| a.iter().any(|s| s == PLUGIN_ID))
 }
 
-/// Copies the plugin, switches it on, and drops the old CSS snippet.
+/// Copies the plugin, switches it on, and drops the old CSS snippet and the
+/// plugin's pre-rename copy.
 fn install_obsidian(vault: &Path) -> std::io::Result<()> {
     let dir = vault.join(".obsidian/plugins").join(PLUGIN_ID);
     std::fs::create_dir_all(&dir)?;
@@ -74,6 +77,7 @@ fn install_obsidian(vault: &Path) -> std::io::Result<()> {
         enabled = serde_json::json!([]);
     }
     let arr = enabled.as_array_mut().expect("array");
+    arr.retain(|s| s != OLD_ID);
     if !arr.iter().any(|s| s == PLUGIN_ID) {
         arr.push(PLUGIN_ID.into());
     }
@@ -89,6 +93,7 @@ fn install_obsidian(vault: &Path) -> std::io::Result<()> {
         }
     }
     let _ = std::fs::remove_file(vault.join(".obsidian/snippets").join(format!("{OLD_SNIPPET}.css")));
+    let _ = std::fs::remove_dir_all(vault.join(".obsidian/plugins").join(OLD_ID));
     Ok(())
 }
 
@@ -105,10 +110,13 @@ fn vscode_installed(dir: &Path) -> bool {
 
 /// Hands the packaged extension to VS Code's own CLI, which works while it runs.
 fn install_vscode() -> Result<(), String> {
-    let vsix = std::env::temp_dir().join(format!("subrayador-{}.vsix", std::process::id()));
+    let vsix = std::env::temp_dir().join(format!("risco-{}.vsix", std::process::id()));
     std::fs::write(&vsix, VSIX).map_err(|e| e.to_string())?;
     let result = ["code", "code-insiders", "codium"].iter().find_map(|cli| {
-        Command::new(cli).arg("--install-extension").arg(&vsix).arg("--force").output().ok()
+        let out = Command::new(cli).arg("--install-extension").arg(&vsix).arg("--force").output().ok()?;
+        let old = format!("{OLD_ID}.{OLD_ID}");
+        let _ = Command::new(cli).arg("--uninstall-extension").arg(old).output();
+        Some(out)
     });
     let _ = std::fs::remove_file(&vsix);
     match result {
@@ -133,7 +141,8 @@ mod tests {
     fn installs_into_vault() {
         let dir = std::env::temp_dir().join(format!("mh-plugins-{}", std::process::id()));
         std::fs::create_dir_all(dir.join(".obsidian/snippets")).unwrap();
-        std::fs::write(dir.join(".obsidian/community-plugins.json"), r#"["otro"]"#).unwrap();
+        std::fs::write(dir.join(".obsidian/community-plugins.json"), r#"["otro","subrayador"]"#).unwrap();
+        std::fs::create_dir_all(dir.join(".obsidian/plugins/subrayador")).unwrap();
         std::fs::write(dir.join(".obsidian/appearance.json"), r#"{"enabledCssSnippets":["x","liquid-highlight"]}"#)
             .unwrap();
         std::fs::write(dir.join(".obsidian/snippets/liquid-highlight.css"), "").unwrap();
@@ -143,6 +152,7 @@ mod tests {
         assert_eq!(read_json(&dir.join(".obsidian/community-plugins.json")), serde_json::json!(["otro", PLUGIN_ID]));
         assert_eq!(read_json(&dir.join(".obsidian/appearance.json"))["enabledCssSnippets"], serde_json::json!(["x"]));
         assert!(!dir.join(".obsidian/snippets/liquid-highlight.css").exists());
+        assert!(!dir.join(".obsidian/plugins/subrayador").exists());
         std::fs::remove_dir_all(dir).unwrap();
     }
 

@@ -1,9 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Subrayador",
-  "mainBinaryName": "subrayador",
+  "productName": "Risco",
+  "mainBinaryName": "risco",
   "version": "0.1.0",
-  "identifier": "app.subrayador.markdown",
+  "identifier": "app.risco",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",

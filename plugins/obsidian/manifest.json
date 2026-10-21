@@ -1,9 +1,9 @@
 {
-  "id": "subrayador",
-  "name": "Subrayador",
+  "id": "risco",
+  "name": "Risco",
   "version": "0.1.0",
   "minAppVersion": "1.5.0",
-  "description": "Muestra los subrayados hechos con Subrayador, guardados junto a cada nota.",
-  "author": "Subrayador",
+  "description": "Muestra los subrayados hechos con Risco, guardados junto a cada nota.",
+  "author": "Risco",
   "isDesktopOnly": true
 }

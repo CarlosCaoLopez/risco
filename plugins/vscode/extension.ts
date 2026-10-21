@@ -1,5 +1,5 @@
 // Feeds each preview the highlights stored beside its note, and refreshes
-// the preview when Subrayador rewrites them.
+// the preview when Risco rewrites them.
 
 import * as fs from "fs";
 import type MarkdownIt from "markdown-it";
@@ -40,14 +40,14 @@ export function activate(ctx: vscode.ExtensionContext) {
   return {
     extendMarkdownIt(md: MarkdownIt) {
       // A trailing token that carries the note's records into the preview.
-      md.core.ruler.push("subrayador", (state) => {
+      md.core.ruler.push("risco", (state) => {
         const env = state.env as { currentDocument?: vscode.Uri } | undefined;
-        const token = new state.Token("subrayador_data", "", 0);
+        const token = new state.Token("risco_data", "", 0);
         token.content = attr(records(env?.currentDocument));
         state.tokens.push(token);
       });
-      md.renderer.rules.subrayador_data = (tokens, idx) =>
-        `<div class="subrayador-data" hidden data-records="${tokens[idx].content}"></div>`;
+      md.renderer.rules.risco_data = (tokens, idx) =>
+        `<div class="risco-data" hidden data-records="${tokens[idx].content}"></div>`;
       return md;
     },
   };

@@ -1,4 +1,4 @@
-// Shows Subrayador's highlights, stored beside each note in a hidden JSONL,
+// Shows Risco's highlights, stored beside each note in a hidden JSONL,
 // in reading view and Live Preview. Also draws Orca's `++…++` marks in color.
 
 import { StateEffect, type Range as CmRange } from "@codemirror/state";
@@ -10,7 +10,7 @@ import { paint, parseRecords, sidecarPath, unpaint, type HlRecord } from "../sha
 const refresh = StateEffect.define<null>();
 const DEFAULT_COLOR = "yellow";
 
-export default class Subrayador extends Plugin {
+export default class Risco extends Plugin {
   private records = new Map<string, HlRecord[]>();
   private watchers = new Map<string, fs.FSWatcher>();
   private repaintTimer: number | null = null;

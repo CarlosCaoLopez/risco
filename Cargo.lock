@@ -2736,33 +2736,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "markdown-highlighter"
-version = "0.1.0"
-dependencies = [
- "active-win-pos-rs",
- "arboard",
- "dirs 6.0.0",
- "enigo",
- "gtk",
- "mdmark",
- "notify",
- "rdev",
- "rodio",
- "rusqlite",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-dialog",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-notification",
- "tauri-plugin-single-instance",
- "walkdir",
- "x11",
-]
-
-[[package]]
 name = "markup5ever"
 version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4007,6 +3980,33 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "risco"
+version = "0.1.0"
+dependencies = [
+ "active-win-pos-rs",
+ "arboard",
+ "dirs 6.0.0",
+ "enigo",
+ "gtk",
+ "mdmark",
+ "notify",
+ "rdev",
+ "rodio",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-autostart",
+ "tauri-plugin-dialog",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-notification",
+ "tauri-plugin-single-instance",
+ "walkdir",
+ "x11",
 ]
 
 [[package]]

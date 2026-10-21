@@ -1,5 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    markdown_highlighter_lib::run()
+    risco_lib::run()
 }

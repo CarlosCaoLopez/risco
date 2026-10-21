@@ -1,11 +1,11 @@
 [package]
-name = "markdown-highlighter"
+name = "risco"
 version = "0.1.0"
 edition = "2021"
 description = "Highlight Markdown text from any viewer with a liquid-glass marker"
 
 [lib]
-name = "markdown_highlighter_lib"
+name = "risco_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

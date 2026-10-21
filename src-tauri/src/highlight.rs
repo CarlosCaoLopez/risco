@@ -142,5 +142,5 @@ pub fn write_atomic(path: &Path, contents: &str) -> std::io::Result<()> {
 }
 
 pub fn notify(app: &AppHandle, body: &str) {
-    let _ = app.notification().builder().title("Subrayador").body(body).show();
+    let _ = app.notification().builder().title("Risco").body(body).show();
 }

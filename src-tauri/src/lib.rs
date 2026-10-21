@@ -133,7 +133,7 @@ fn open_settings(app: &AppHandle) {
         return;
     }
     let _ = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html".into()))
-        .title("Subrayador")
+        .title("Risco")
         .inner_size(480.0, 720.0)
         .min_inner_size(400.0, 520.0)
         .build();
@@ -165,7 +165,7 @@ fn build_tray(app: &AppHandle, cfg: &Config) -> tauri::Result<()> {
 
     TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().cloned().expect("bundle icon"))
-        .tooltip("Subrayador")
+        .tooltip("Risco")
         .menu(&menu)
         .show_menu_on_left_click(true)
         .on_menu_event(|app, event| match event.id.as_ref() {

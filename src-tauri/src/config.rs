@@ -41,13 +41,20 @@ impl Default for Config {
 }
 
 fn path() -> Option<PathBuf> {
+    Some(dirs::config_dir()?.join("risco").join("config.json"))
+}
+
+/// Where the app kept its settings before it was called Risco.
+fn old_path() -> Option<PathBuf> {
     Some(dirs::config_dir()?.join("markdown-highlighter").join("config.json"))
 }
 
 impl Config {
     pub fn load() -> Self {
-        path()
-            .and_then(|p| std::fs::read_to_string(p).ok())
+        [path(), old_path()]
+            .into_iter()
+            .flatten()
+            .find_map(|p| std::fs::read_to_string(p).ok())
             .and_then(|s| serde_json::from_str(&s).ok())
             .unwrap_or_default()
     }

@@ -3,7 +3,7 @@
 import { paint, unpaint, type HlRecord } from "../shared/paint";
 
 function run() {
-  const data = document.querySelector<HTMLElement>(".subrayador-data");
+  const data = document.querySelector<HTMLElement>(".risco-data");
   let records: HlRecord[] = [];
   try {
     records = JSON.parse(data?.dataset.records ?? "[]");

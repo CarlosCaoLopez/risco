@@ -47,7 +47,7 @@ copyFileSync(css, `${out}/obsidian/styles.css`);
 // The app installs the extension with `code --install-extension`.
 await createVSIX({
   cwd: `${out}/vscode`,
-  packagePath: resolve(`${out}/subrayador.vsix`),
+  packagePath: resolve(`${out}/risco.vsix`),
   dependencies: false,
   allowMissingRepository: true,
   skipLicense: true,
