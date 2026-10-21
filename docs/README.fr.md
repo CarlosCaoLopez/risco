@@ -11,6 +11,13 @@
 <h3 align="center">Surlignez n’importe quel Markdown. Sans y toucher.</h3>
 
 <p align="center">
+  <a href="https://api.reuse.software/info/github.com/CarlosCaoLopez/risco"><img src="https://api.reuse.software/badge/github.com/CarlosCaoLopez/risco" alt="REUSE status"></a>
+  <a href="https://www.bestpractices.dev/projects/0000"><img src="https://www.bestpractices.dev/projects/0000/badge" alt="OpenSSF Best Practices"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/CarlosCaoLopez/risco"><img src="https://api.scorecard.dev/projects/github.com/CarlosCaoLopez/risco/badge" alt="OpenSSF Scorecard"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later"></a>
+</p>
+
+<p align="center">
   Libre et open source. Pour Linux, Windows et macOS.
   <br>
   <a href="https://github.com/CarlosCaoLopez/risco/releases/latest">Télécharger&nbsp;&rsaquo;</a>
@@ -123,3 +130,9 @@ Sous Linux, il vous faut aussi les paquets habituels de Tauri/WebKitGTK,
 `libxtst` et une bibliothèque appindicator.
 
 L’app installe elle-même les plugins des visionneuses au premier lancement.
+
+<br>
+
+## Licence
+
+Risco est un logiciel libre sous [GNU General Public License v3.0 ou ultérieure](../LICENSE), distribué **sans aucune garantie**. Pour contribuer, lisez [CONTRIBUTING.md](../CONTRIBUTING.md) (en anglais) ; les problèmes de sécurité se signalent en privé selon [SECURITY.md](../SECURITY.md).

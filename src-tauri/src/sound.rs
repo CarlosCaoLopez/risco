@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Felt tip on paper, synthesised: band-passed noise whose loudness follows
 //! the pointer speed, plus fibre grain, and a cap click when the stroke ends.
 
@@ -190,7 +194,8 @@ impl Iterator for Scratch {
 
     fn next(&mut self) -> Option<f32> {
         let running = self.params.running.load(Ordering::Relaxed);
-        let target = if running { f32::from_bits(self.params.level.load(Ordering::Relaxed)) } else { 0.0 };
+        let target =
+            if running { f32::from_bits(self.params.level.load(Ordering::Relaxed)) } else { 0.0 };
         // ~40 ms glide so speed changes never click.
         self.amp += (target - self.amp) * 0.0006;
         if !running && self.amp < 1e-4 {
@@ -249,7 +254,11 @@ impl Iterator for CapClick {
         let secs = self.t as f32 / RATE as f32;
         let tick = |start: f32, decay: f32| {
             let d = secs - start;
-            if d < 0.0 { 0.0 } else { (-d * decay).exp() }
+            if d < 0.0 {
+                0.0
+            } else {
+                (-d * decay).exp()
+            }
         };
         let env = tick(0.0, 260.0) + 0.55 * tick(0.045, 340.0);
         let thump = (2.0 * std::f32::consts::PI * 190.0 * secs).sin() * tick(0.0, 70.0) * 0.35;

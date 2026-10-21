@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 mod config;
 mod follow;
 mod highlight;
@@ -7,8 +11,8 @@ mod locate;
 mod orca;
 mod overlay;
 mod permissions;
-mod selection;
 mod plugins;
+mod selection;
 mod sound;
 mod store;
 mod window;
@@ -27,7 +31,8 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, WebviewUrl, WebviewWindowBuil
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
-const COLOR_KEYS: [Code; 5] = [Code::Digit1, Code::Digit2, Code::Digit3, Code::Digit4, Code::Digit5];
+const COLOR_KEYS: [Code; 5] =
+    [Code::Digit1, Code::Digit2, Code::Digit3, Code::Digit4, Code::Digit5];
 
 struct AppState {
     config: Arc<RwLock<Config>>,
@@ -104,7 +109,11 @@ fn snapshot(app: AppHandle, state: tauri::State<AppState>) -> Snapshot {
 fn save_config(app: AppHandle, config: Config) {
     // The app's own bookkeeping may have moved on since the window read it.
     update_config(&app, |c| {
-        *c = Config { seen_viewers: std::mem::take(&mut c.seen_viewers), first_run_done: c.first_run_done, ..config }
+        *c = Config {
+            seen_viewers: std::mem::take(&mut c.seen_viewers),
+            first_run_done: c.first_run_done,
+            ..config
+        }
     });
 }
 
@@ -151,7 +160,8 @@ fn keep_viewers(app: AppHandle) {
     std::thread::spawn(move || {
         let mut reported = HashSet::new();
         loop {
-            let seen = app.state::<AppState>().config.read().expect("config lock").seen_viewers.clone();
+            let seen =
+                app.state::<AppState>().config.read().expect("config lock").seen_viewers.clone();
             let results = plugins::sync(&seen);
             let mut done = Vec::new();
             for (v, result) in &results {
@@ -159,17 +169,28 @@ fn keep_viewers(app: AppHandle) {
                     Ok(()) if v.kind == "vscode" => done.push("VS Code".to_string()),
                     Ok(()) => done.push(i18n::tf("notify.vault", &[("name", &v.name)])),
                     Err(e) if reported.insert(v.path.clone()) => {
-                        highlight::notify(&app, &i18n::tf("notify.activate_failed", &[("name", &v.name), ("error", e)]));
+                        highlight::notify(
+                            &app,
+                            &i18n::tf("notify.activate_failed", &[("name", &v.name), ("error", e)]),
+                        );
                     }
                     Err(_) => {}
                 }
             }
             if !done.is_empty() {
                 let obsidian = results.iter().any(|(v, r)| v.kind == "obsidian" && r.is_ok());
-                let tail = i18n::t(if obsidian { "notify.reload_obsidian" } else { "notify.reopen_preview" });
-                highlight::notify(&app, &i18n::tf("notify.activated", &[("names", &done.join(", ")), ("tail", &tail)]));
+                let tail = i18n::t(if obsidian {
+                    "notify.reload_obsidian"
+                } else {
+                    "notify.reopen_preview"
+                });
+                highlight::notify(
+                    &app,
+                    &i18n::tf("notify.activated", &[("names", &done.join(", ")), ("tail", &tail)]),
+                );
             }
-            let fresh: Vec<PathBuf> = results.into_iter().map(|(v, _)| v.path).filter(|p| !seen.contains(p)).collect();
+            let fresh: Vec<PathBuf> =
+                results.into_iter().map(|(v, _)| v.path).filter(|p| !seen.contains(p)).collect();
             if !fresh.is_empty() {
                 update_config(&app, |c| c.seen_viewers.extend(fresh));
             }
@@ -203,22 +224,38 @@ fn open_settings(app: &AppHandle) {
 }
 
 fn build_tray(app: &AppHandle, cfg: &Config) -> tauri::Result<()> {
-    let enabled = CheckMenuItem::with_id(app, "enabled", i18n::t("tray.enabled"), true, cfg.enabled, None::<&str>)?;
+    let enabled = CheckMenuItem::with_id(
+        app,
+        "enabled",
+        i18n::t("tray.enabled"),
+        true,
+        cfg.enabled,
+        None::<&str>,
+    )?;
     let colors = mdmark::COLORS
         .iter()
         .enumerate()
         .map(|(i, id)| {
             let accel = format!("Ctrl+Alt+{}", i + 1);
             let label = i18n::t(&format!("color.{id}"));
-            CheckMenuItem::with_id(app, format!("color:{id}"), label, true, cfg.color == *id, Some(accel))
+            CheckMenuItem::with_id(
+                app,
+                format!("color:{id}"),
+                label,
+                true,
+                cfg.color == *id,
+                Some(accel),
+            )
         })
         .collect::<tauri::Result<Vec<_>>>()?;
     let color_refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
         colors.iter().map(|c| c as &dyn tauri::menu::IsMenuItem<Wry>).collect();
     let color_menu = Submenu::with_items(app, i18n::t("pen.title"), true, &color_refs)?;
-    let sound = CheckMenuItem::with_id(app, "sound", i18n::t("tray.sound"), true, cfg.sound, None::<&str>)?;
+    let sound =
+        CheckMenuItem::with_id(app, "sound", i18n::t("tray.sound"), true, cfg.sound, None::<&str>)?;
     let undo = MenuItem::with_id(app, "undo", i18n::t("tray.undo"), true, None::<&str>)?;
-    let settings = MenuItem::with_id(app, "settings", i18n::t("tray.settings"), true, None::<&str>)?;
+    let settings =
+        MenuItem::with_id(app, "settings", i18n::t("tray.settings"), true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", i18n::t("tray.quit"), true, None::<&str>)?;
     let sep = || PredefinedMenuItem::separator(app);
     let menu = Menu::with_items(

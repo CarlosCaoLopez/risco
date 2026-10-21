@@ -20,7 +20,7 @@
   "modifier.shift": "Shift",
   "effects.title": "Efektler",
   "effects.animation": "Kalem animasyonu",
-  "effects.animation.hint": "Seçim yaparken bir kalem imleci takip eder.",
+  "effects.animation.hint": "Seçim yaparken mürekkep imlecin altında çizilir.",
   "effects.sound": "Kâğıt sesi",
   "effects.sound.hint": "Keçe ucun kâğıda sürtünmesi ve kapağın tık sesi.",
   "effects.volume": "Ses düzeyi",

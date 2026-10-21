@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Highlights stored outside the source, anchored by the text they cover.
 //!
 //! A [`Quote`] is the highlighted plain text plus a little context on either
@@ -72,7 +76,11 @@ pub fn marks(source: &str) -> Vec<Mark> {
 /// Highlight `selection` as a new quote, or remove the quotes covering it if
 /// it is already fully highlighted. Mirrors [`crate::toggle`] without touching
 /// the source.
-pub fn toggle_quotes(source: &str, existing: &[Quote], selection: &str) -> Result<QuoteEdit, Error> {
+pub fn toggle_quotes(
+    source: &str,
+    existing: &[Quote],
+    selection: &str,
+) -> Result<QuoteEdit, Error> {
     let needle = normalize(selection);
     if needle.is_empty() {
         return Err(Error::EmptySelection);
@@ -106,7 +114,12 @@ pub fn toggle_quotes(source: &str, existing: &[Quote], selection: &str) -> Resul
             }
             Ok(QuoteEdit { action: Action::Added, remove, add: Some(proj.quote(range)), ambiguous })
         }
-        None => Ok(QuoteEdit { action: Action::Removed, remove: touching(&occs[0]), add: None, ambiguous }),
+        None => Ok(QuoteEdit {
+            action: Action::Removed,
+            remove: touching(&occs[0]),
+            add: None,
+            ambiguous,
+        }),
     }
 }
 
@@ -130,8 +143,14 @@ impl Projection {
         let before: Vec<char> = quote.prefix.chars().rev().collect();
         let after: Vec<char> = quote.suffix.chars().collect();
         let score = |r: &Range<usize>| {
-            let left = self.chars[..r.start].iter().rev().zip(&before).take_while(|(c, q)| c.ch == **q).count();
-            let right = self.chars[r.end..].iter().zip(&after).take_while(|(c, q)| c.ch == **q).count();
+            let left = self.chars[..r.start]
+                .iter()
+                .rev()
+                .zip(&before)
+                .take_while(|(c, q)| c.ch == **q)
+                .count();
+            let right =
+                self.chars[r.end..].iter().zip(&after).take_while(|(c, q)| c.ch == **q).count();
             left + right
         };
         let mut best: Option<(usize, Range<usize>)> = None;
@@ -170,7 +189,10 @@ mod tests {
         let src = "Uno **dos** tres cuatro";
         let mut q = Vec::new();
         add(src, &mut q, "dos tres");
-        assert_eq!(q, [Quote { exact: "dos tres".into(), prefix: "Uno ".into(), suffix: " cuatro".into() }]);
+        assert_eq!(
+            q,
+            [Quote { exact: "dos tres".into(), prefix: "Uno ".into(), suffix: " cuatro".into() }]
+        );
         assert_eq!(resolve(src, &q[0]), Some(4..12));
     }
 
@@ -221,7 +243,10 @@ mod tests {
         let src = r#"a <mark class="hl hl-pink">b</mark> c ++d e++ f"#;
         let m = marks(src);
         assert_eq!(m.len(), 2);
-        assert_eq!((m[0].quote.exact.as_str(), m[0].plus, m[0].color.as_deref()), ("b", false, Some("pink")));
+        assert_eq!(
+            (m[0].quote.exact.as_str(), m[0].plus, m[0].color.as_deref()),
+            ("b", false, Some("pink"))
+        );
         assert_eq!((m[1].quote.exact.as_str(), m[1].plus), ("d e", true));
     }
 

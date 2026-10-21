@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Guess which Markdown file the focused window shows, from its title.
 
 use std::path::PathBuf;
@@ -145,6 +149,9 @@ mod tests {
 
     #[test]
     fn generic_title() {
-        assert_eq!(parse_title(App::Other, "readme.md (~/x) — Orca").name.as_deref(), Some("readme.md"));
+        assert_eq!(
+            parse_title(App::Other, "readme.md (~/x) — Orca").name.as_deref(),
+            Some("readme.md")
+        );
     }
 }

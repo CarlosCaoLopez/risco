@@ -20,7 +20,7 @@
   "modifier.shift": "Shift",
   "effects.title": "효과",
   "effects.animation": "형광펜 애니메이션",
-  "effects.animation.hint": "선택하는 동안 형광펜이 커서를 따라다닙니다.",
+  "effects.animation.hint": "선택하는 동안 커서 아래에 잉크가 그려집니다.",
   "effects.sound": "종이 소리",
   "effects.sound.hint": "펠트 펜촉이 종이를 스치는 소리와 뚜껑 닫히는 소리.",
   "effects.volume": "음량",

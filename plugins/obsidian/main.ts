@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Shows Risco's highlights, stored beside each note in a hidden JSONL,
 // in reading view and Live Preview. Also draws Orca's `++…++` marks in color.
 

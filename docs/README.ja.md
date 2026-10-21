@@ -11,6 +11,13 @@
 <h3 align="center">どんな Markdown にもハイライトを。ファイルには手を触れずに。</h3>
 
 <p align="center">
+  <a href="https://api.reuse.software/info/github.com/CarlosCaoLopez/risco"><img src="https://api.reuse.software/badge/github.com/CarlosCaoLopez/risco" alt="REUSE status"></a>
+  <a href="https://www.bestpractices.dev/projects/0000"><img src="https://www.bestpractices.dev/projects/0000/badge" alt="OpenSSF Best Practices"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/CarlosCaoLopez/risco"><img src="https://api.scorecard.dev/projects/github.com/CarlosCaoLopez/risco/badge" alt="OpenSSF Scorecard"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later"></a>
+</p>
+
+<p align="center">
   無料のオープンソース。Linux、Windows、macOS に対応。
   <br>
   <a href="https://github.com/CarlosCaoLopez/risco/releases/latest">ダウンロード&nbsp;&rsaquo;</a>
@@ -112,3 +119,9 @@ npm run tauri build
 Linux では、通常の Tauri/WebKitGTK パッケージに加えて `libxtst` と appindicator ライブラリが必要です。
 
 アプリは初回起動時にビューアのプラグインを自動でインストールします。
+
+<br>
+
+## ライセンス
+
+Risco は [GNU General Public License v3.0 以降](../LICENSE) のもとで提供されるフリーソフトウェアで、**いかなる保証もありません**。貢献については [CONTRIBUTING.md](../CONTRIBUTING.md)（英語）を、セキュリティの問題は [SECURITY.md](../SECURITY.md) に従って非公開で報告してください。

@@ -11,6 +11,13 @@
 <h3 align="center">高亮任何 Markdown。原文丝毫不动。</h3>
 
 <p align="center">
+  <a href="https://api.reuse.software/info/github.com/CarlosCaoLopez/risco"><img src="https://api.reuse.software/badge/github.com/CarlosCaoLopez/risco" alt="REUSE status"></a>
+  <a href="https://www.bestpractices.dev/projects/0000"><img src="https://www.bestpractices.dev/projects/0000/badge" alt="OpenSSF Best Practices"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/CarlosCaoLopez/risco"><img src="https://api.scorecard.dev/projects/github.com/CarlosCaoLopez/risco/badge" alt="OpenSSF Scorecard"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later"></a>
+</p>
+
+<p align="center">
   免费开源。支持 Linux、Windows 和 macOS。
   <br>
   <a href="https://github.com/CarlosCaoLopez/risco/releases/latest">下载&nbsp;&rsaquo;</a>
@@ -112,3 +119,9 @@ npm run tauri build
 在 Linux 上，还需要常见的 Tauri/WebKitGTK 软件包、`libxtst` 和一个 appindicator 库。
 
 应用首次运行时会自行安装查看器插件。
+
+<br>
+
+## 许可证
+
+Risco 是依据 [GNU 通用公共许可证 v3.0 或更高版本](../LICENSE) 发布的自由软件，**不提供任何担保**。如需贡献，请阅读 [CONTRIBUTING.md](../CONTRIBUTING.md)（英文）；安全问题请按照 [SECURITY.md](../SECURITY.md) 私下报告。

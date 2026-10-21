@@ -20,7 +20,7 @@
   "modifier.shift": "Shift",
   "effects.title": "效果",
   "effects.animation": "荧光笔动画",
-  "effects.animation.hint": "选择时会有一支荧光笔跟随光标。",
+  "effects.animation.hint": "选择时，墨迹会随光标绘制。",
   "effects.sound": "纸张声音",
   "effects.sound.hint": "毡头划过纸面的声音和笔帽的咔哒声。",
   "effects.volume": "音量",
