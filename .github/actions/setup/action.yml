@@ -1,0 +1,39 @@
+# Installs what every CI job needs to compile Risco: the Tauri system
+# packages on Linux, Node, Rust, and the bundled viewer plugins that
+# src-tauri embeds with include_str!.
+name: Set up Risco
+description: System packages, Node, Rust and the bundled plugins
+
+inputs:
+  components:
+    description: Extra rustup components, e.g. "clippy, rustfmt"
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Linux packages
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
+          librsvg2-dev libxtst-dev libx11-dev libasound2-dev patchelf
+
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      with:
+        node-version: 22
+        cache: npm
+
+    - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      with:
+        toolchain: stable
+        components: ${{ inputs.components }}
+
+    - uses: swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+
+    - shell: bash
+      run: npm ci
+
+    - shell: bash
+      run: npm run build:plugins

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Runs inside the Markdown preview: paints the records the extension embedded.
 
 import { paint, unpaint, type HlRecord } from "../shared/paint";

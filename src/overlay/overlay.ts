@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Draws the marker and its glass ink while the user selects, in a
 // transparent click-through window covering one monitor.
 

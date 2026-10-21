@@ -1,11 +1,15 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Transparent, click-through windows (one per monitor) where the marker
 //! animation is drawn while the user selects.
 
 use serde::Serialize;
 use std::time::Duration;
 use tauri::{
-    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow,
-    WebviewWindowBuilder,
+    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl,
+    WebviewWindow, WebviewWindowBuilder,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -100,7 +104,11 @@ fn unmanage(win: &WebviewWindow) {
     }
 }
 
-fn place(win: &WebviewWindow, pos: PhysicalPosition<i32>, size: PhysicalSize<u32>) -> tauri::Result<()> {
+fn place(
+    win: &WebviewWindow,
+    pos: PhysicalPosition<i32>,
+    size: PhysicalSize<u32>,
+) -> tauri::Result<()> {
     win.set_size(size)?;
     win.set_position(pos)
 }

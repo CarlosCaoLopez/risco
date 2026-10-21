@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Paint sidecar highlights onto a rendered Markdown page.
 //
 // The page text is flattened the way `mdmark` projects a source (whitespace

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Bundle the VS Code extension and the Obsidian plugin into plugins/dist/,
 // where the app embeds them for "Instalar".
 
@@ -49,6 +53,7 @@ const withVersion = (from, to) => {
 
 withVersion("plugins/vscode/package.json", `${out}/vscode/package.json`);
 copyFileSync(css, `${out}/vscode/liquid-highlight.css`);
+copyFileSync("LICENSE", `${out}/vscode/LICENSE`);
 withVersion("plugins/obsidian/manifest.json", `${out}/obsidian/manifest.json`);
 copyFileSync(css, `${out}/obsidian/styles.css`);
 
@@ -58,5 +63,4 @@ await createVSIX({
   packagePath: resolve(`${out}/risco.vsix`),
   dependencies: false,
   allowMissingRepository: true,
-  skipLicense: true,
 });

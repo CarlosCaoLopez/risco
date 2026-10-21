@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Carlos Cao López <caolopezcarlos@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Global mouse/keyboard hook that recognises "modifier + drag".
 //!
 //! rdev reports physical keys, so a remapped modifier (`ctrl:nocaps`, xmodmap)
