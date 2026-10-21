@@ -1,4 +1,8 @@
 //! Global mouse/keyboard hook that recognises "modifier + drag".
+//!
+//! rdev reports physical keys, so a remapped modifier (`ctrl:nocaps`, xmodmap)
+//! looks like some other key. On X11 the modifier is therefore read from the
+//! server's logical state when the button goes down; key tracking is the fallback.
 
 use crate::config::{Config, Modifier};
 use rdev::{Button, EventType, Key};
@@ -24,6 +28,54 @@ fn is_modifier(key: Key, m: Modifier) -> bool {
     }
 }
 
+#[cfg(target_os = "linux")]
+mod x11_state {
+    use super::Modifier;
+    use std::os::raw::{c_int, c_uint};
+    use x11::xlib;
+
+    pub struct Display(*mut xlib::Display);
+
+    impl Display {
+        pub fn open() -> Option<Self> {
+            let d = unsafe { xlib::XOpenDisplay(std::ptr::null()) };
+            (!d.is_null()).then_some(Self(d))
+        }
+
+        pub fn modifier_held(&self, m: Modifier) -> bool {
+            let want = match m {
+                Modifier::Ctrl => xlib::ControlMask,
+                Modifier::Alt => xlib::Mod1Mask | xlib::Mod5Mask,
+                Modifier::Shift => xlib::ShiftMask,
+                Modifier::Meta => xlib::Mod4Mask,
+            };
+            let (mut root, mut child) = (0, 0);
+            let (mut rx, mut ry, mut wx, mut wy): (c_int, c_int, c_int, c_int) = (0, 0, 0, 0);
+            let mut mask: c_uint = 0;
+            let ok = unsafe {
+                xlib::XQueryPointer(
+                    self.0,
+                    xlib::XDefaultRootWindow(self.0),
+                    &mut root,
+                    &mut child,
+                    &mut rx,
+                    &mut ry,
+                    &mut wx,
+                    &mut wy,
+                    &mut mask,
+                )
+            };
+            ok != 0 && mask & want != 0
+        }
+    }
+
+    impl Drop for Display {
+        fn drop(&mut self) {
+            unsafe { xlib::XCloseDisplay(self.0) };
+        }
+    }
+}
+
 pub fn spawn(config: Arc<RwLock<Config>>, tx: Sender<Gesture>) {
     std::thread::Builder::new()
         .name("input".into())
@@ -33,6 +85,8 @@ pub fn spawn(config: Arc<RwLock<Config>>, tx: Sender<Gesture>) {
             let mut active = false;
             let mut pos = (0.0, 0.0);
             let mut origin = (0.0, 0.0);
+            #[cfg(target_os = "linux")]
+            let display = x11_state::Display::open();
 
             let result = rdev::listen(move |event| {
                 let (enabled, modifier) = {
@@ -56,6 +110,8 @@ pub fn spawn(config: Arc<RwLock<Config>>, tx: Sender<Gesture>) {
                         }
                     }
                     EventType::ButtonPress(Button::Left) => {
+                        #[cfg(target_os = "linux")]
+                        let held = display.as_ref().map_or(held, |d| d.modifier_held(modifier));
                         armed = enabled && held;
                         origin = pos;
                     }

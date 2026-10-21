@@ -2759,6 +2759,7 @@ dependencies = [
  "tauri-plugin-notification",
  "tauri-plugin-single-instance",
  "walkdir",
+ "x11",
 ]
 
 [[package]]
