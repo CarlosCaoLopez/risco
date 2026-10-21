@@ -9,8 +9,35 @@
 <p align="center">
   Free and open source. For Linux, Windows and macOS.
   <br>
-  <a href="#build-from-source">Build from source&nbsp;&rsaquo;</a>
+  <a href="https://github.com/CarlosCaoLopez/risco/releases/latest">Download&nbsp;&rsaquo;</a>
 </p>
+
+<br>
+
+## Install
+
+Download the installer for your system from the
+[latest release](https://github.com/CarlosCaoLopez/risco/releases/latest):
+
+| | |
+|:--|:--|
+| **macOS** | Open the `.dmg` and drag Risco to Applications. |
+| **Windows** | Run the `-setup.exe`. |
+| **Linux** | Install the `.deb` or `.rpm`, or run the `.AppImage`. |
+
+Or install it with Homebrew:
+
+```sh
+brew install --cask CarlosCaoLopez/tap/risco
+```
+
+Risco is signed with a Developer ID and notarized by Apple, so it opens like
+any other app. On first launch macOS asks for Accessibility access, which
+Risco needs to see the gesture. Windows may show a SmartScreen warning
+because the installer isn't signed yet: choose *More info › Run anyway*.
+
+That's it. Risco lives in the tray, starts with your computer, and installs
+its plugin in every Obsidian vault and in VS Code on its own.
 
 <br>
 
@@ -76,5 +103,4 @@ npm run tauri build
 On Linux you also need the usual Tauri/WebKitGTK packages, `libxtst` and an
 appindicator library.
 
-Then open *Ajustes…* from the tray and install the plugin once per Obsidian
-vault and once in VS Code.
+The app installs the viewer plugins itself the first time it runs.
