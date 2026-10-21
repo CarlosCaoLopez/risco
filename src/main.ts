@@ -30,6 +30,7 @@ interface Snapshot {
   viewers: Viewer[];
   detectedRoots: string[];
   autostart: boolean;
+  accessibility: boolean;
 }
 
 const COLORS: [id: string, label: string][] = [
@@ -206,6 +207,9 @@ async function init() {
     save();
   });
   $("test-sound").addEventListener("click", () => invoke("test_sound", { volume: config.volume }));
+
+  $("permission").hidden = snap.accessibility;
+  $("open-accessibility").addEventListener("click", () => invoke("open_accessibility"));
 
   $<HTMLInputElement>("autostart").checked = snap.autostart;
   $<HTMLInputElement>("autostart").addEventListener("change", async (e) => {

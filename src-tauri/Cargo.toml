@@ -31,6 +31,9 @@ dirs = "6"
 rusqlite = { version = "0.40", features = ["bundled"] }
 notify = "8"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18"
 x11 = { version = "2.21", features = ["xlib"] }

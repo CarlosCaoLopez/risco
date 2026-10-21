@@ -5,6 +5,7 @@ mod input;
 mod locate;
 mod orca;
 mod overlay;
+mod permissions;
 mod selection;
 mod plugins;
 mod sound;
@@ -48,6 +49,7 @@ struct Snapshot {
     viewers: Vec<plugins::Viewer>,
     detected_roots: Vec<PathBuf>,
     autostart: bool,
+    accessibility: bool,
 }
 
 fn update_config(app: &AppHandle, f: impl FnOnce(&mut Config)) {
@@ -78,6 +80,7 @@ fn snapshot(app: AppHandle, state: tauri::State<AppState>) -> Snapshot {
         detected_roots: locate::roots(&[]),
         viewers: plugins::viewers(),
         autostart: app.autolaunch().is_enabled().unwrap_or(false),
+        accessibility: permissions::trusted(false),
         config,
     }
 }
@@ -107,6 +110,11 @@ fn migrate_marks(state: tauri::State<AppState>) -> Result<usize, String> {
         }
     }
     Ok(notes)
+}
+
+#[tauri::command]
+fn open_accessibility() -> Result<(), String> {
+    permissions::open_settings()
 }
 
 #[tauri::command]
@@ -278,8 +286,12 @@ pub fn run() {
                 update_config(&handle, |c| c.first_run_done = true);
             }
 
-            // First run: show the settings so the user can point at their notes.
-            if locate::roots(&cfg.roots).is_empty() {
+            // Show the settings when something still needs the user: a folder
+            // of notes, or on macOS the Accessibility permission.
+            if !permissions::trusted(true) {
+                highlight::notify(&handle, "Permite Risco en Ajustes del Sistema › Privacidad y seguridad › Accesibilidad y vuelve a abrirlo.");
+                open_settings(&handle);
+            } else if locate::roots(&cfg.roots).is_empty() {
                 open_settings(&handle);
             }
             Ok(())
@@ -290,7 +302,8 @@ pub fn run() {
             install_plugin,
             migrate_marks,
             test_sound,
-            set_autostart
+            set_autostart,
+            open_accessibility
         ])
         .build(tauri::generate_context!())
         .expect("error while building the app")
