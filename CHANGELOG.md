@@ -8,6 +8,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-28
+
 ### Added
 
 - The interface, tray menu, notifications and error messages are translated
@@ -37,6 +39,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   than by review.
 - GitHub Actions are pinned to full commit SHAs, so a moved tag in a
   third-party action cannot change what our release pipeline runs.
+- The selection overlay draws only the glass ink; the marker pen that
+  followed the cursor is gone.
+- The felt-tip sound is off by default. It can still be turned on in
+  Settings.
 
 ## [0.1.1] - 2026-10-21
 
@@ -92,6 +98,7 @@ First public pre-release.
 - Overlays appear on the monitor where the drag happens.
 - macOS asks for the Accessibility permission instead of silently ignoring gestures.
 
-[Unreleased]: https://github.com/CarlosCaoLopez/risco/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/CarlosCaoLopez/risco/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/CarlosCaoLopez/risco/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/CarlosCaoLopez/risco/compare/v0.1.0-rc1...v0.1.1
 [0.1.0-rc1]: https://github.com/CarlosCaoLopez/risco/releases/tag/v0.1.0-rc1
