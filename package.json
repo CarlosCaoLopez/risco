@@ -24,7 +24,7 @@
     "@types/vscode": "1.140.0",
     "@vscode/vsce": "4.0.0",
     "obsidian": "1.14.4",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "vite": "7.3.7"
   }
 }
