@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "@codemirror/state": "6.7.6",
-    "@codemirror/view": "6.43.13",
-    "@tauri-apps/cli": "2.12.3",
+    "@codemirror/view": "6.43.15",
+    "@tauri-apps/cli": "2.12.4",
     "@types/markdown-it": "14.2.0",
     "@types/node": "26.6.5",
     "@types/vscode": "1.140.0",
