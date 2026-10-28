@@ -31,7 +31,7 @@ active-win-pos-rs = "0.11"
 rodio = { version = "0.23", default-features = false, features = ["playback"] }
 walkdir = "2.5"
 dirs = "6"
-rusqlite = { version = "0.40", features = ["bundled"] }
+rusqlite = { version = "0.41", features = ["bundled"] }
 notify = "8"
 
 [target.'cfg(target_os = "macos")'.dependencies]
